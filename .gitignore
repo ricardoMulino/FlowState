@@ -1,3 +1,25 @@
-.env
+# Dependencies
+node_modules
 .venv
-.agent
+venv
+__pycache__
+
+# Environment
+.env
+
+# Build outputs
+dist
+build
+
+# IDE
+.vscode
+.idea
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# System
+.DS_Store
+Thumbs.db
