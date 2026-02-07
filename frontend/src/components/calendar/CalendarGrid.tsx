@@ -10,7 +10,7 @@ import { createPortal } from 'react-dom';
 
 const CalendarGrid: React.FC = () => {
     const { tasks, moveTask, resizeTask } = useCalendarState();
-    const { sensors, handleDragStart, handleDragEnd: coreHandleDragEnd, activeId } = useDragAndDrop(moveTask, tasks);
+    const { sensors, handleDragStart, handleDragEnd: coreHandleDragEnd, activeId } = useDragAndDrop(moveTask);
 
     // Date Logic
     const today = new Date();

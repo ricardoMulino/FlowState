@@ -1,10 +1,9 @@
-import { useSensor, useSensors, PointerSensor, DndContext, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
+import { useSensor, useSensors, PointerSensor, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
 import { useState } from 'react';
 import type { Task, CategoryId } from '../types/calendar';
 
 export function useDragAndDrop(
-    moveTask: (id: string, newStartTime: Date, newCategory?: CategoryId) => void,
-    tasks: Task[]
+    moveTask: (id: string, newStartTime: Date, newCategory?: CategoryId) => void
 ) {
     const [activeId, setActiveId] = useState<string | null>(null);
     const [resizeTaskState, setResizeTaskState] = useState<{ id: string; duration: number } | null>(null);
@@ -39,7 +38,7 @@ export function useDragAndDrop(
     };
 
     const handleDragEnd = (event: DragEndEvent, resizeTaskFn?: (id: string, duration: number) => void) => {
-        const { active, over, delta } = event;
+        const { delta } = event;
 
         if (isResizing && resizeTaskFn && resizeTaskState) {
             const minutesDelta = delta.y * (30 / 40);
@@ -47,8 +46,8 @@ export function useDragAndDrop(
             const newDuration = Math.max(30, resizeTaskState.duration + snappedDelta);
 
             resizeTaskFn(resizeTaskState.id, newDuration);
-        } else if (over && !isResizing) {
-            const parts = (over.id as string).split('|');
+        } else if (event.over && !isResizing) {
+            const parts = (event.over.id as string).split('|');
             if (parts.length === 4) {
                 const [dayStr, category, hourStr, minuteStr] = parts;
                 const hour = parseInt(hourStr);
@@ -58,7 +57,7 @@ export function useDragAndDrop(
                 newDate.setHours(hour);
                 newDate.setMinutes(minute);
 
-                moveTask(active.id as string, newDate, category as CategoryId);
+                moveTask(event.active.id as string, newDate, category as CategoryId);
             }
         }
 

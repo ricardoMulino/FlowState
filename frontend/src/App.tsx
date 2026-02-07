@@ -1,6 +1,7 @@
-import React from 'react';
+//import React from 'react';
+import { Outlet } from 'react-router-dom';
 import Header from './components/layout/Header';
-import CalendarGrid from './components/calendar/CalendarGrid';
+//import CalendarGrid from './components/calendar/CalendarGrid';
 
 function App() {
   return (
@@ -8,7 +9,8 @@ function App() {
       <div className="max-w-[1600px] mx-auto p-4 flex flex-col h-screen overflow-hidden">
         <Header />
         <main className="flex-1 mt-4 overflow-hidden relative glass-panel rounded-2xl">
-          <CalendarGrid />
+          {/*<CalendarGrid />*/}
+          <Outlet />
         </main>
       </div>
     </div>
