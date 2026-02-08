@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { LogOut } from 'lucide-react';
-import { signOutUser } from '../../auth.ts';
+import { signOutUser } from '../../pages/auth.ts';
 import { useNavigate } from 'react-router-dom';
 
 export const Header: React.FC = () => {
