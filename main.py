@@ -60,6 +60,11 @@ class TaskCreate(BaseModel):
     flowbot_suggest_duration: Optional[int] = None
     actual_duration: Optional[int] = None
     color: Optional[str] = None
+    ai_estimation_status: Optional[str] = None
+    ai_time_estimation: Optional[int] = None
+    ai_recommendation: Optional[str] = None
+    ai_reasoning: Optional[str] = None
+    ai_confidence: Optional[str] = None
     socket_id: Optional[str] = None
 
 
@@ -489,22 +494,6 @@ async def get_tasks_by_tag(email: str, tag_name: str):
     return [serialize_task(task) for task in tasks]
 
 
-class TaskCreate(BaseModel):
-    email: str
-    title: str
-    task_client_id: str
-    description: Optional[str] = None
-    tag_names: Optional[List[str]] = None
-    start_time: Optional[str] = None
-    duration: Optional[int] = 0
-    is_completed: bool = False
-    color: Optional[str] = None
-    ai_estimation_status: Optional[str] = None
-    ai_time_estimation: Optional[int] = None
-    ai_recommendation: Optional[str] = None
-    ai_reasoning: Optional[str] = None
-    ai_confidence: Optional[str] = None
-    socket_id: Optional[str] = None # Added for WebSocket updates
 
 @app.post("/api/tasks")
 async def create_task(task: TaskCreate, background_tasks: BackgroundTasks):
