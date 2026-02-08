@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { signInUser, signUpUser } from './auth.ts' // Import from your helper file
+import { useNavigate } from 'react-router-dom'
 
 export default function AuthPage() {
     const navigate = useNavigate()
@@ -21,18 +22,24 @@ export default function AuthPage() {
         }
 
         if (result.error) {
+            console.error('Supabase Auth Error:', result.error);
             setMessage(`Error: ${result.error.message}`)
         } else {
             // Success handling
+            console.log('Supabase Auth Success:', result.data);
             if (!isLoginView && !result.data.session) {
                 // If signing up and "Confirm Email" is ON, session will be null
                 setMessage('Registration successful! Please check your email to confirm.')
             } else {
                 setMessage('Success! You are logged in.')
+<<<<<<< HEAD
                 // Redirect logic
                 setTimeout(() => {
                     navigate('/');
                 }, 1000);
+=======
+                navigate('/')
+>>>>>>> 560bff67bf4145cad71b28c106f01a9f8777c7b1
             }
         }
     }
@@ -43,8 +50,8 @@ export default function AuthPage() {
 
             <form onSubmit={handleAuth}>
                 <div>
-                    <label>Email</label>
-                    <input
+                    <label>Email </label>
+                    <input style={{ color: 'black' }}
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -54,7 +61,7 @@ export default function AuthPage() {
 
                 <div>
                     <label>Password</label>
-                    <input
+                    <input style={{ color: 'black' }}
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}

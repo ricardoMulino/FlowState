@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { Task, CategoryId } from '../types/calendar';
+import type { Task, CategoryId } from '../types/calendarTypes';
 import { MOCK_TASKS } from '../data/mock-tasks';
 import { addMinutes, isSameDay } from 'date-fns';
 

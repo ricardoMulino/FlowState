@@ -13,10 +13,10 @@ export interface Task {
     category: CategoryId;
     startTime: Date;
     endTime: Date;
-    duration: number; // minutes
+    duration: number;
     color: string;
     isCompleted: boolean;
-    estimatedTime: number; // minutes
+    estimatedTime: number;
 }
 
 export const CATEGORIES: Category[] = [

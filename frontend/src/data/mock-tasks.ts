@@ -1,4 +1,4 @@
-import type { Task } from '../types/calendar';
+import type { Task } from '../types/calendarTypes';
 import { addDays, setHours, setMinutes, startOfDay } from 'date-fns';
 
 const today = startOfDay(new Date());

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { cn } from '../../lib/utils';
-import type { CategoryId } from '../../types/calendar';
+import type { CategoryId } from '../../types/calendarTypes';
 import { format } from 'date-fns';
 
 interface TimeBlockProps {
