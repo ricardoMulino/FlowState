@@ -8,14 +8,14 @@ import {
     type DragStartEvent,
     type DragEndEvent
 } from '@dnd-kit/core';
-import type { Task, CategoryId } from '../types/calendarTypes';
+import type { Task } from '../types/calendarTypes';
 import type { TaskTemplate } from '../data/templates';
 import { isSameDay } from 'date-fns';
 
 interface UseDragAndDropProps {
     tasks: Task[];
-    onTaskMove: (taskId: string, newStartTime: Date, newCategory: CategoryId) => void;
-    onTaskCreate?: (template: TaskTemplate, startTime: Date, category: CategoryId) => void;
+    onTaskMove: (taskId: string, newStartTime: Date, newTag?: string) => void;
+    onTaskCreate?: (template: TaskTemplate, startTime: Date, tag: string) => void;
 }
 
 export function useDragAndDrop({ tasks, onTaskMove, onTaskCreate }: UseDragAndDropProps) {
@@ -81,7 +81,7 @@ export function useDragAndDrop({ tasks, onTaskMove, onTaskCreate }: UseDragAndDr
             // Helper to check for collisions and push tasks
             const checkAndPushCollisions = (
                 tasks: Task[],
-                newItem: { id: string, startTime: Date, duration: number, category: CategoryId },
+                newItem: { id: string, startTime: Date, duration: number, tag: string },
                 excludeTaskId?: string
             ): { movedTasks: { id: string, startTime: Date }[] } => {
                 const movedTasks: { id: string, startTime: Date }[] = [];
@@ -164,7 +164,7 @@ export function useDragAndDrop({ tasks, onTaskMove, onTaskCreate }: UseDragAndDr
                 // Collision Check
                 checkAndPushCollisions(
                     tasks,
-                    { id: 'temp-new', startTime: newStartTime, duration: activeTemplate.duration, category: (overData.category || activeTemplate.category) as CategoryId }
+                    { id: 'temp-new', startTime: newStartTime, duration: activeTemplate.duration, tag: (overData.category || activeTemplate.category) }
                 );
 
                 // Create the new task (possibly shifted if it was pushed by an earlier task)
@@ -211,7 +211,7 @@ export function useDragAndDrop({ tasks, onTaskMove, onTaskCreate }: UseDragAndDr
                     }
                 }
 
-                onTaskCreate(activeTemplate, adjustedStartTime, (overData.category || activeTemplate.category) as CategoryId);
+                onTaskCreate(activeTemplate, adjustedStartTime, (overData.category || activeTemplate.category));
 
                 // What about pushing later tasks?
                 // The newly created task might overlap later tasks.
@@ -259,7 +259,7 @@ export function useDragAndDrop({ tasks, onTaskMove, onTaskCreate }: UseDragAndDr
                 onTaskMove(
                     active.id as string,
                     adjustedStartTime,
-                    (overData.category || activeTask.category) as CategoryId
+                    (overData.category || (activeTask.tagNames?.[0]))
                 );
 
                 // 3. Check for later tasks that are now overlapped by Active Task's new position
@@ -273,7 +273,7 @@ export function useDragAndDrop({ tasks, onTaskMove, onTaskCreate }: UseDragAndDr
                         if (t.startTime.getTime() >= adjustedStartTime.getTime()) {
                             // T is later. Push T.
                             const newTStart = new Date(adjustedEndTime);
-                            onTaskMove(t.id, newTStart, t.category);
+                            onTaskMove(t.id, newTStart, t.tagNames?.[0]);
                             // Now T has moved. It effectively extends the "blocker" zone.
                             // Update adjustedEndTime to include T's duration so it pushes subsequent tasks too?
                             adjustedEndTime = new Date(newTStart.getTime() + t.duration * 60000);

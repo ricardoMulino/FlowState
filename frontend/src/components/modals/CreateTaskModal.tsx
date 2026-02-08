@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { X, Clock, Calendar as CalendarIcon, Tag, AlignLeft, CheckSquare, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { type CategoryId, type Category } from '../../types/calendarTypes';
+import { type Category } from '../../types/calendarTypes';
 
 interface CreateTaskModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (title: string, duration: number, startTime: Date, category: CategoryId, description: string, isCompleted: boolean, actualDuration?: number) => void;
+    onSave: (title: string, duration: number, startTime: Date, tag: string, description: string, isCompleted: boolean, actualDuration?: number) => void;
     categories: Category[];
 }
 
@@ -18,7 +18,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ isOpen, onClos
     const [isCompleted, setIsCompleted] = useState(false);
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [time, setTime] = useState('09:00');
-    const [category, setCategory] = useState<CategoryId>('work');
+    const [tag, setTag] = useState<string>('work');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -28,7 +28,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ isOpen, onClos
         // Only pass actualDuration if it's a number and task is completed
         const finalActualDuration = isCompleted && typeof actualDuration === 'number' ? actualDuration : undefined;
 
-        onSave(title, duration, startTime, category, description, isCompleted, finalActualDuration);
+        onSave(title, duration, startTime, tag, description, isCompleted, finalActualDuration);
         onClose();
 
         // Reset form slightly after close for smooth animation
@@ -38,7 +38,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ isOpen, onClos
             setDuration(60);
             setActualDuration('');
             setIsCompleted(false);
-            setCategory('work');
+            setTag('work');
         }, 300);
     };
 
@@ -150,14 +150,14 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ isOpen, onClos
                                         />
                                     </div>
 
-                                    {/* Category Input */}
+                                    {/* Tag Input */}
                                     <div>
                                         <label className="block text-sm font-medium text-slate-400 mb-2 flex items-center gap-2">
-                                            <Tag className="w-4 h-4" /> Category
+                                            <Tag className="w-4 h-4" /> Tag
                                         </label>
                                         <select
-                                            value={category}
-                                            onChange={(e) => setCategory(e.target.value as CategoryId)}
+                                            value={tag}
+                                            onChange={(e) => setTag(e.target.value)}
                                             className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none"
                                         >
                                             {categories.map(cat => (

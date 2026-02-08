@@ -8,13 +8,15 @@ interface DayCellProps {
     category?: CategoryId; // Optional now, or defaults to specific logic
     tasks: Task[];
     onEdit?: (task: Task) => void;
+    onUpdate?: (taskId: string, updates: Partial<Task>) => void;
 }
 
 export const DayCell: React.FC<DayCellProps> = ({
     day,
     category = 'work', // Default fallback if needed, or handle as generic
     tasks,
-    onEdit
+    onEdit,
+    onUpdate
 }) => {
     return (
         <SnapGrid date={day} category={category}>
@@ -27,7 +29,7 @@ export const DayCell: React.FC<DayCellProps> = ({
                             top: `${getYPosition(task.startTime)}px`,
                         }}
                     >
-                        <SmoothDraggableTask task={task} onEdit={onEdit} />
+                        <SmoothDraggableTask task={task} onEdit={onEdit} onUpdate={onUpdate} />
                     </div>
                 ))}
             </div>

@@ -24,7 +24,8 @@ class State(TypedDict):
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
 client = MongoClient(MONGO_URI)
 db = client["flowstate_db"]
-collection = db["flowstate_events"]
+# Changed to 'tasks' collection instead of 'flowstate_events'
+collection = db["tasks"]
 
 # 2. Embeddings
 embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
@@ -33,15 +34,21 @@ embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
 
 def retrieve_events(state: State):
-    """Retrieves relevant events based on the user's latest message using Atlas Vector Search."""
+    """Retrieves relevant past tasks based on the user's latest message using Atlas Vector Search, filtered by tags."""
     query = state["messages"][-1].content
-    user_id = state.get("user_id", "me@example.com") # Default for dev
+    user_id = state.get("user_id", "me@example.com")
+    tag_names = state.get("tag_names", []) # Expecting tag names in state
     
     # 1. Generate query embedding
-    print(f"Searching for: {query}")
+    print(f"Searching for tasks similar to: {query} with tags: {tag_names}")
     query_vec = embeddings.embed_query(query)
     
-    # 2. Define Atlas Vector Search Pipeline
+    # 2. Define filter - only tasks sharing at least one tag
+    filter_query = {"email": user_id}
+    if tag_names:
+        filter_query["tag_names"] = {"$in": tag_names}
+    
+    # 3. Define Atlas Vector Search Pipeline
     pipeline = [
         {
             "$vectorSearch": {
@@ -49,8 +56,8 @@ def retrieve_events(state: State):
                 "path": "embedding",
                 "queryVector": query_vec,
                 "numCandidates": 100,
-                "limit": 3,
-                "filter": {"attendees": user_id} 
+                "limit": 4, # User requested top 4
+                "filter": filter_query
             }
         },
         {
@@ -58,26 +65,27 @@ def retrieve_events(state: State):
                 "_id": 0,
                 "title": 1,
                 "description": 1,
-                "start_time": 1,
+                "duration": 1,
+                "tag_names": 1,
                 "score": {"$meta": "vectorSearchScore"}
             }
         }
     ]
     
-    # 3. Execute Search
+    # 4. Execute Search
     try:
         results = list(collection.aggregate(pipeline))
     except Exception as e:
         print(f"Error executing vector search: {e}")
-        return {"context": ["Error retrieving events."]}
+        return {"context": ["Error retrieving context."]}
     
     if not results:
-        return {"context": ["No events found."]}
+        return {"context": ["No similar past tasks found."]}
         
-    # 4. Format results
+    # 5. Format results
     top_docs = []
     for event in results:
-        doc_str = f"Date: {event['start_time']} - Title: {event['title']} ({event.get('description', '')})"
+        doc_str = f"Task: {event['title']} (Duration: {event.get('duration', 'Unknown')}m) - Tags: {', '.join(event.get('tag_names', []))}"
         top_docs.append(doc_str)
         
     return {"context": top_docs}
@@ -86,7 +94,13 @@ def retrieve_events(state: State):
 def chatbot(state: State):
     # Invoke the model with context
     context_str = "\n".join(state.get("context", []))
-    system_prompt = f"You are a helpful assistant. Use the following context to answer the user's question:\n\n{context_str}"
+    system_prompt = (
+        "You are a task estimation expert. Based on the following similar past tasks "
+        "and their durations, estimate the duration for the new task in minutes.\n\n"
+        "Return ONLY a JSON object with 'duration' (integer) and 'reasoning' (string).\n"
+        "Duration MUST be a positive integer. If you cannot estimate, return 0.\n\n"
+        f"Context of past similar tasks:\n{context_str}"
+    )
     
     messages = [SystemMessage(content=system_prompt)] + state["messages"]
     return {"messages": [llm.invoke(messages)]}

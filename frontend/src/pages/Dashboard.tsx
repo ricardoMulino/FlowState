@@ -4,7 +4,7 @@ import { TaskSidebar } from '../components/sidebar/TaskSidebar';
 import { CreateTaskModal } from '../components/modals/CreateTaskModal';
 import { useCalendarState } from '../hooks/useCalendarState';
 import { useTags } from '../hooks/useTags';
-import type { CategoryId, Category } from '../types/calendarTypes';
+import type { Category } from '../types/calendarTypes';
 import { CATEGORIES } from '../types/calendarTypes';
 import { DndContext, DragOverlay, defaultDropAnimationSideEffects } from '@dnd-kit/core';
 import { useDragAndDrop } from '../hooks/useDragAndDrop';
@@ -14,6 +14,9 @@ import { ViewSwitcher, type CalendarViewMode } from '../components/calendar/View
 import { MonthView } from '../components/calendar/MonthView';
 import { YearView } from '../components/calendar/YearView';
 import { useAuth } from '../contexts/AuthContext';
+import { useWebSocket } from '../contexts/WebSocketContext';
+import { useEffect } from 'react';
+import { addMinutes } from 'date-fns';
 
 export const Dashboard = () => {
     const { email } = useAuth();
@@ -27,6 +30,40 @@ export const Dashboard = () => {
     } = useCalendarState(email);
 
     const { tags } = useTags(email);
+    const { socketId, lastMessage } = useWebSocket();
+
+    // Listen for AI estimation results
+    useEffect(() => {
+        if (lastMessage?.type === 'agent_result' && lastMessage.task_client_id) {
+            console.log('AI Estimation received:', lastMessage);
+            const { task_client_id, duration, recommendation, reasoning, confidence } = lastMessage;
+
+            // Find the task by taskClientId (for new tasks) or id (fallback for older tasks)
+            const task = tasks.find(t => t.taskClientId === task_client_id || t.id === task_client_id);
+            if (task) {
+                const newEndTime = addMinutes(task.startTime, duration > 0 ? duration : task.duration);
+                updateTask(task.id, {
+                    duration: duration > 0 ? duration : task.duration,
+                    endTime: newEndTime,
+                    estimatedTime: duration,
+                    aiEstimationStatus: duration > 0 ? 'success' : 'error',
+                    aiTimeEstimation: duration,
+                    aiRecommendation: recommendation || 'keep',
+                    aiReasoning: reasoning,
+                    aiConfidence: confidence
+                });
+            } else {
+                console.warn('Task not found for AI estimation:', task_client_id);
+            }
+        } else if (lastMessage?.type === 'agent_error' && lastMessage.task_client_id) {
+            const task = tasks.find(t => t.taskClientId === lastMessage.task_client_id || t.id === lastMessage.task_client_id);
+            if (task) {
+                updateTask(task.id, {
+                    aiEstimationStatus: 'error'
+                });
+            }
+        }
+    }, [lastMessage, tasks, updateTask]);
 
     // Merge default categories with fetched tags
     // We treat tags as categories for now
@@ -43,7 +80,7 @@ export const Dashboard = () => {
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isDragExpanded, setIsDragExpanded] = useState(false);
-    const [filterCategory, setFilterCategory] = useState<CategoryId | 'all'>('all');
+    const [filterTag, setFilterTag] = useState<string | 'all'>('all');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
     // Calendar State
@@ -63,19 +100,21 @@ export const Dashboard = () => {
         .slice(0, 5);
 
     // Filter tasks for the calendar
-    const filteredTasks = filterCategory === 'all'
+    const filteredTasks = filterTag === 'all'
         ? tasks
-        : tasks.filter(t => t.category === filterCategory || t.tagNames?.includes(filterCategory));
+        : tasks.filter(t => t.tagNames?.includes(filterTag));
 
 
     const { sensors, activeTask, activeTemplate, handleDragStart, handleDragEnd } = useDragAndDrop({
         tasks,
         onTaskMove: moveTask,
-        onTaskCreate: (template, startTime, category) => {
+        onTaskCreate: (template, startTime, tag) => {
+            const clientId = window.crypto.randomUUID();
             addTask({
-                id: window.crypto.randomUUID(),
+                id: clientId,
+                taskClientId: clientId, // Same ID for WebSocket matching before fetch
                 title: template.title,
-                category: category as CategoryId,
+                tagNames: tag ? [tag] : [],
                 startTime,
                 endTime: new Date(startTime.getTime() + template.duration * 60000),
                 duration: template.duration,
@@ -83,8 +122,9 @@ export const Dashboard = () => {
                 isCompleted: false,
                 estimatedTime: template.duration,
                 recurrence: template.recurrence,
-                actualDuration: undefined
-            });
+                actualDuration: undefined,
+                aiEstimationStatus: 'loading'
+            }, socketId);
         }
     });
 
@@ -127,8 +167,8 @@ export const Dashboard = () => {
                     onOpenCreateModal={() => setIsCreateModalOpen(true)}
                     isOpen={isSidebarOpen || isDragExpanded}
                     onToggle={() => setIsSidebarOpen(prev => !prev)}
-                    filter={filterCategory}
-                    onFilterChange={setFilterCategory}
+                    filter={filterTag}
+                    onFilterChange={setFilterTag}
                     categories={dynamicCategories}
                 />
                 <main className="flex-1 overflow-hidden relative glass-panel rounded-2xl flex flex-col">
@@ -193,25 +233,28 @@ export const Dashboard = () => {
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
                 categories={dynamicCategories}
-                onSave={(title, duration, startTime, category, description, isCompleted, actualDuration) => {
-                    const categoryColor = dynamicCategories.find(c => c.id === category)?.color || '#3b82f6';
+                onSave={(title, duration, startTime, tag, description, isCompleted, actualDuration) => {
+                    const tagColor = dynamicCategories.find(c => c.id === tag)?.color || '#3b82f6';
                     const endTime = new Date(startTime);
                     endTime.setMinutes(endTime.getMinutes() + duration);
+                    const clientId = window.crypto.randomUUID();
 
                     addTask({
-                        id: window.crypto.randomUUID(),
+                        id: clientId,
+                        taskClientId: clientId, // Same ID for WebSocket matching before fetch
                         title,
                         description,
-                        category,
+                        tagNames: [tag],
                         startTime,
                         endTime,
                         duration,
-                        color: categoryColor,
+                        color: tagColor,
                         isCompleted,
                         estimatedTime: duration,
                         actualDuration,
-                        recurrence: undefined // or default
-                    });
+                        recurrence: undefined,
+                        aiEstimationStatus: 'loading'
+                    }, socketId);
                     setIsCreateModalOpen(false);
                 }}
             />

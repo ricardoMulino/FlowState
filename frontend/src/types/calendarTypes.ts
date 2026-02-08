@@ -8,9 +8,9 @@ export interface Category {
 
 export interface Task {
     id: string;
+    taskClientId?: string; // Frontend-generated ID for matching WebSocket updates
     title: string;
     description?: string;
-    category: CategoryId;
     startTime: Date;
     endTime: Date;
     duration: number;
@@ -20,6 +20,11 @@ export interface Task {
     actualDuration?: number;
     recurrence?: string;
     tagNames?: string[];
+    aiEstimationStatus?: 'loading' | 'success' | 'error';
+    aiTimeEstimation?: number;
+    aiRecommendation?: 'increase' | 'keep';
+    aiReasoning?: string;
+    aiConfidence?: 'high' | 'medium' | 'low';
 }
 
 export const CATEGORIES: Category[] = [

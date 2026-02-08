@@ -1,19 +1,18 @@
 import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { cn } from '../../lib/utils';
-import type { CategoryId } from '../../types/calendarTypes';
 import { format } from 'date-fns';
 
 interface TimeBlockProps {
     day: Date;
     hour: number;
     minute: number;
-    category: CategoryId;
+    tag?: string;
 }
 
-const TimeBlock: React.FC<TimeBlockProps> = ({ day, hour, minute, category }) => {
+const TimeBlock: React.FC<TimeBlockProps> = ({ day, hour, minute, tag }) => {
     // Unique ID for the drop zone
-    const id = `${day.toISOString()}|${category}|${hour}|${minute}`;
+    const id = `${day.toISOString()}|${tag || 'default'}|${hour}|${minute}`;
     // console.log('TimeBlock render', id); 
 
     // Construct the specific date time for this block
@@ -25,7 +24,7 @@ const TimeBlock: React.FC<TimeBlockProps> = ({ day, hour, minute, category }) =>
         data: {
             type: 'calendar-cell',
             date: blockDate,
-            category
+            category: tag // Keep 'category' key for backward compatibility with drag handler
         },
     });
 

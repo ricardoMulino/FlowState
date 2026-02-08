@@ -6,7 +6,7 @@ const today = startOfDay(new Date());
 const createTask = (
     id: string,
     title: string,
-    category: 'work' | 'school' | 'hobbies',
+    tag: string,
     dayOffset: number,
     hour: number,
     minute: number,
@@ -19,7 +19,7 @@ const createTask = (
     return {
         id,
         title,
-        category,
+        tagNames: [tag],
         startTime: start,
         endTime: end,
         duration,

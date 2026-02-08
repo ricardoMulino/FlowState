@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Clock, Calendar as CalendarIcon, Tag, AlignLeft, Repeat, Trash2, CheckSquare, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CATEGORIES, type CategoryId, type Task } from '../../types/calendarTypes';
+import { type Task } from '../../types/calendarTypes';
 
 interface TaskDetailsModalProps {
     isOpen: boolean;
@@ -33,7 +33,6 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
     const [isCompleted, setIsCompleted] = useState(task.isCompleted || false);
     const [recurrence, setRecurrence] = useState(task.recurrence || 'none');
     const [tagsInput, setTagsInput] = useState((task.tagNames || []).join(', '));
-    const [category, setCategory] = useState<CategoryId>(task.category);
 
     useEffect(() => {
         if (isOpen) {
@@ -49,7 +48,6 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
             setIsCompleted(task.isCompleted || false);
             setRecurrence(task.recurrence || 'none');
             setTagsInput((task.tagNames || []).join(', '));
-            setCategory(task.category);
         }
     }, [isOpen, task]);
 
@@ -73,8 +71,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
             actualDuration: isCompleted && typeof actualDuration === 'number' ? actualDuration : undefined,
             isCompleted,
             recurrence: recurrence === 'none' ? undefined : recurrence,
-            tagNames,
-            category
+            tagNames
         };
 
         onSave(task.id, updates);
@@ -180,7 +177,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                                     </div>
                                 </div>
 
-                                {/* Duration & Category */}
+                                {/* Duration & AI Estimation */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-slate-400 mb-1">Est. Duration (min)</label>
@@ -195,17 +192,29 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-slate-400 mb-1 flex items-center gap-2">
-                                            <Tag className="w-4 h-4" /> Category
+                                            <Sparkles className="w-4 h-4" /> AI Estimation
                                         </label>
-                                        <select
-                                            value={category}
-                                            onChange={(e) => setCategory(e.target.value as CategoryId)}
-                                            className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none"
-                                        >
-                                            {CATEGORIES.map(cat => (
-                                                <option key={cat.id} value={cat.id}>{cat.label}</option>
-                                            ))}
-                                        </select>
+                                        <div className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-2 text-white">
+                                            {task.aiEstimationStatus === 'loading' && (
+                                                <span className="text-blue-400 animate-pulse">? Estimating...</span>
+                                            )}
+                                            {(task.aiEstimationStatus === 'success' && (task.aiRecommendation === 'keep' || task.duration === task.aiTimeEstimation)) && (
+                                                <span className="text-green-400 font-medium flex items-center gap-1" title={task.aiReasoning}>
+                                                    <CheckSquare className="w-4 h-4" /> Looks good ({task.duration}min)
+                                                </span>
+                                            )}
+                                            {task.aiEstimationStatus === 'success' && task.aiRecommendation === 'increase' && task.duration !== task.aiTimeEstimation && (
+                                                <span className="text-yellow-400 font-medium flex items-center gap-1" title={task.aiReasoning}>
+                                                    ⚠ Suggest {task.aiTimeEstimation}min
+                                                </span>
+                                            )}
+                                            {task.aiEstimationStatus === 'error' && (
+                                                <span className="text-red-400">❌ Error</span>
+                                            )}
+                                            {!task.aiEstimationStatus && (
+                                                <span className="text-slate-500">No AI estimation</span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 
