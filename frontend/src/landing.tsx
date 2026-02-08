@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 
-export function Landing() {
+function Landing() {
     const navigate = useNavigate();
 
     const LogSign = () => {
