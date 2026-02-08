@@ -82,27 +82,28 @@ def estimate_task_time(
     }
 
 
+# Example usage - only run when executed directly
+if __name__ == "__main__":
+    print("="*60)
+    print("TASK TIME ESTIMATOR - Example Usage")
+    print("="*60)
 
-# Example usage
-print("="*60)
-print("TASK TIME ESTIMATOR - Example Usage")
-print("="*60)
+    result = estimate_task_time(
+        id="3okjfa",
+        email="test@example.com",
+        task_title="Implement user dashboard",
+        task_description="Create a responsive dashboard with charts and user statistics",
+        tag_name="work",
+        tag_description="Work tasks",
+        initial_estimate_minutes=180  # 3 hours
+    )
 
-result = estimate_task_time(
-    id="3okjfa",
-    email="test@example.com",
-    task_title="Implement user dashboard",
-    task_description="Create a responsive dashboard with charts and user statistics",
-    tag_name="work",
-    tag_description="Work tasks",
-    initial_estimate_minutes=180  # 3 hours
-)
+    print(f"\n✓ Recommendation: {result['recommendation'].upper()}")
+    print(f"✓ Suggested Time: {result['suggested_minutes']} minutes ({result['suggested_minutes']/60:.1f} hours)")
+    print(f"✓ Confidence: {result['confidence'].upper()}")
+    print(f"✓ Similar Tags Found: {result['similar_tags_found']}")
+    print(f"✓ Historical Tasks Analyzed: {result['historical_tasks_analyzed']}")
+    print(f"\n📝 Reasoning:")
+    print(f"   {result['reasoning']}")
+    print("="*60)
 
-print(f"\n✓ Recommendation: {result['recommendation'].upper()}")
-print(f"✓ Suggested Time: {result['suggested_minutes']} minutes ({result['suggested_minutes']/60:.1f} hours)")
-print(f"✓ Confidence: {result['confidence'].upper()}")
-print(f"✓ Similar Tags Found: {result['similar_tags_found']}")
-print(f"✓ Historical Tasks Analyzed: {result['historical_tasks_analyzed']}")
-print(f"\n📝 Reasoning:")
-print(f"   {result['reasoning']}")
-print("="*60)

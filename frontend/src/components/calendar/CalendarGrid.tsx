@@ -127,6 +127,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                                                 category="work"
                                                 tasks={tasks.filter(t => isSameDay(t.startTime, day))}
                                                 onEdit={setEditingTask}
+                                                onUpdate={onTaskUpdate}
                                             />
                                         </div>
                                     ))}

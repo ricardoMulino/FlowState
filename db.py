@@ -305,10 +305,16 @@ def set_task(
     tag_names: Optional[List[str]] = None,
     start_time: Optional[Any] = None,
     duration: Optional[int] = 0,
+    recurrence: Optional[str] = None,
     is_completed: bool = False,
     flowbot_suggest_duration: Optional[int] = None,
     actual_duration: Optional[int] = None,
-    color: Optional[str] = None
+    color: Optional[str] = None,
+    ai_estimation_status: Optional[str] = None,
+    ai_time_estimation: Optional[int] = None,
+    ai_recommendation: Optional[str] = None,
+    ai_reasoning: Optional[str] = None,
+    ai_confidence: Optional[str] = None
 ) -> bool:
     """
     Creates or updates a task. 
@@ -344,12 +350,24 @@ def set_task(
         update_data["start_time"] = start_time
     if duration is not None:
         update_data["duration"] = duration
+    if recurrence is not None:
+        update_data["recurrence"] = recurrence
     if flowbot_suggest_duration is not None:
         update_data["flowbot_suggest_duration"] = flowbot_suggest_duration
     if actual_duration is not None:
         update_data["actual_duration"] = actual_duration
     if color is not None:
         update_data["color"] = color
+    if ai_estimation_status is not None:
+        update_data["ai_estimation_status"] = ai_estimation_status
+    if ai_time_estimation is not None:
+        update_data["ai_time_estimation"] = ai_time_estimation
+    if ai_recommendation is not None:
+        update_data["ai_recommendation"] = ai_recommendation
+    if ai_reasoning is not None:
+        update_data["ai_reasoning"] = ai_reasoning
+    if ai_confidence is not None:
+        update_data["ai_confidence"] = ai_confidence
     
     result = collection.update_one(
         {"email": email, "title": title},
@@ -737,3 +755,38 @@ set_task(
     ["work"]
 )
 client.close()
+
+def update_task_ai_estimation(
+    client: MongoClient,
+    task_client_id: str,
+    ai_estimation_status: str,
+    ai_time_estimation: Optional[int] = None,
+    ai_recommendation: Optional[str] = None,
+    ai_reasoning: Optional[str] = None,
+    ai_confidence: Optional[str] = None
+) -> bool:
+    """
+    Updates a task's AI estimation fields using its task_client_id.
+    """
+    db = client[DB_NAME]
+    collection = db["tasks"]
+    
+    update_data = {
+        "ai_estimation_status": ai_estimation_status
+    }
+    
+    if ai_time_estimation is not None:
+        update_data["ai_time_estimation"] = ai_time_estimation
+    if ai_recommendation is not None:
+        update_data["ai_recommendation"] = ai_recommendation
+    if ai_reasoning is not None:
+        update_data["ai_reasoning"] = ai_reasoning
+    if ai_confidence is not None:
+        update_data["ai_confidence"] = ai_confidence
+        
+    result = collection.update_one(
+        {"task_client_id": task_client_id},
+        {"$set": update_data}
+    )
+    
+    return result.acknowledged

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import type { Task, CategoryId } from '../types/calendarTypes';
+import type { Task } from '../types/calendarTypes';
 import { addMinutes, isSameDay } from 'date-fns';
 import { taskAPI } from '../api/flowstate';
 
@@ -13,17 +13,22 @@ export function useCalendarState(userEmail: string | null) {
             // Transform API tasks to frontend Task format
             const formattedTasks: Task[] = fetchedTasks.map((t: any) => ({
                 id: t._id || t.id,
+                taskClientId: t.task_client_id, // Preserve for WebSocket matching
                 title: t.title,
                 description: t.description,
                 startTime: t.start_time ? new Date(t.start_time) : new Date(), // Fallback
                 endTime: t.end_time ? new Date(t.end_time) : addMinutes(new Date(), 30),
-                category: (t.tag_names?.[0] as CategoryId) || 'work',
                 duration: t.duration || 30,
                 color: t.color || '#3b82f6',
                 isCompleted: t.is_completed || false,
                 estimatedTime: t.estimatedTime || 30,
                 recurrence: t.recurrence,
-                tagNames: t.tag_names || []
+                tagNames: t.tag_names || [],
+                aiEstimationStatus: t.ai_estimation_status,
+                aiTimeEstimation: t.ai_time_estimation,
+                aiRecommendation: t.ai_recommendation,
+                aiReasoning: t.ai_reasoning,
+                aiConfidence: t.ai_confidence
             }));
             setTasks(formattedTasks);
         } catch (error) {
@@ -35,7 +40,7 @@ export function useCalendarState(userEmail: string | null) {
         fetchTasks();
     }, [fetchTasks]);
 
-    const addTask = useCallback(async (task: Task) => {
+    const addTask = useCallback(async (task: Task, socketId?: string) => {
         if (!userEmail) return;
         // Optimistic update
         setTasks((prev) => [...prev, task]);
@@ -44,18 +49,21 @@ export function useCalendarState(userEmail: string | null) {
                 userEmail,
                 task.title,
                 task.description,
-                [task.category],
+                task.tagNames || [],
                 task.startTime,
-                task.endTime,
+                // task.endTime removed from API call
                 task.recurrence,
-                task.color
+                task.color,
+                task.id, // Pass task_client_id
+                socketId, // Pass socket_id
+                task.aiEstimationStatus
             );
-            // Refresh to get ID
+            // Refresh to get ID (though WebSocket might beat it)
             fetchTasks();
         } catch (e) {
             console.error("Failed to add task", e);
         }
-    }, [fetchTasks]);
+    }, [fetchTasks, userEmail]);
 
     const updateTask = useCallback(async (id: string, updates: Partial<Task>) => {
         setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...updates } : t)));
@@ -63,10 +71,15 @@ export function useCalendarState(userEmail: string | null) {
             const backendUpdates: any = { ...updates };
             // Map frontend keys to backend keys
             if (updates.startTime) backendUpdates.start_time = updates.startTime.toISOString();
-            if (updates.endTime) backendUpdates.end_time = updates.endTime.toISOString();
+            // if (updates.endTime) backendUpdates.end_time = updates.endTime.toISOString(); // Removed
             if (updates.tagNames) backendUpdates.tag_names = updates.tagNames;
             if (updates.isCompleted !== undefined) backendUpdates.is_completed = updates.isCompleted;
             if (updates.color) backendUpdates.color = updates.color;
+            if (updates.aiEstimationStatus) backendUpdates.ai_estimation_status = updates.aiEstimationStatus;
+            if (updates.aiTimeEstimation) backendUpdates.ai_time_estimation = updates.aiTimeEstimation;
+            if (updates.aiRecommendation) backendUpdates.ai_recommendation = updates.aiRecommendation;
+            if (updates.aiReasoning) backendUpdates.ai_reasoning = updates.aiReasoning;
+            if (updates.aiConfidence) backendUpdates.ai_confidence = updates.aiConfidence;
 
             await taskAPI.update(id, backendUpdates);
         } catch (e) {
@@ -74,7 +87,7 @@ export function useCalendarState(userEmail: string | null) {
         }
     }, []);
 
-    const moveTask = useCallback((id: string, newStartTime: Date, newCategory?: CategoryId) => {
+    const moveTask = useCallback((id: string, newStartTime: Date, newTag?: string) => {
         setTasks((prev) => prev.map((t) => {
             if (t.id !== id) return t;
 
@@ -82,17 +95,18 @@ export function useCalendarState(userEmail: string | null) {
             const endTime = addMinutes(newStartTime, duration);
 
             // Trigger API update
+            const newTagNames = newTag ? [newTag] : t.tagNames;
             const updates: Partial<Task> = {
                 startTime: newStartTime,
                 endTime,
-                category: newCategory || t.category
+                tagNames: newTagNames
             };
 
             // We call the API asynchronously but update state immediately
             taskAPI.update(id, {
                 start_time: newStartTime.toISOString(),
-                end_time: endTime.toISOString(),
-                tag_names: [newCategory || t.category]
+                // end_time: endTime.toISOString(), // Removed
+                tag_names: newTagNames
             }).catch(console.error);
 
             return {
@@ -110,9 +124,7 @@ export function useCalendarState(userEmail: string | null) {
 
             // Trigger API update
             taskAPI.update(id, {
-                end_time: endTime.toISOString(),
-                // We might need to store duration explicitly if backend supports it,
-                // otherwise it's derived from start/end
+                duration: newDuration
             }).catch(console.error);
 
             return {
@@ -134,9 +146,9 @@ export function useCalendarState(userEmail: string | null) {
         }
     }, []);
 
-    const getTasksForDayAndCategory = useCallback((date: Date, categoryId: CategoryId) => {
+    const getTasksForDayAndTag = useCallback((date: Date, tagId: string) => {
         return tasks.filter((t) =>
-            (t.category === categoryId || t.tagNames?.includes(categoryId)) && isSameDay(t.startTime, date)
+            t.tagNames?.includes(tagId) && isSameDay(t.startTime, date)
         );
     }, [tasks]);
 
@@ -147,6 +159,6 @@ export function useCalendarState(userEmail: string | null) {
         moveTask,
         resizeTask,
         deleteTask,
-        getTasksForDayAndCategory,
+        getTasksForDayAndTag,
     };
 }

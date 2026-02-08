@@ -1,7 +1,7 @@
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { motion } from 'framer-motion';
-import { type Task, type CategoryId, type Category } from '../../types/calendarTypes';
+import { type Task, type Category } from '../../types/calendarTypes';
 import { TASK_TEMPLATES, type TaskTemplate } from '../../data/templates';
 import { Plus, GripVertical, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -11,8 +11,8 @@ interface TaskSidebarProps {
     onOpenCreateModal: () => void;
     isOpen: boolean;
     onToggle: () => void;
-    filter: CategoryId | 'all';
-    onFilterChange: (filter: CategoryId | 'all') => void;
+    filter: string | 'all';
+    onFilterChange: (filter: string | 'all') => void;
     categories: Category[];
 }
 
@@ -142,8 +142,22 @@ export const TaskSidebar: React.FC<TaskSidebarProps> = ({
                                     <div key={task.id} className="p-3 rounded-lg bg-white/5 border border-white/5 text-sm group hover:border-white/20 transition-colors">
                                         <div className="font-medium text-slate-200">{task.title}</div>
                                         <div className="flex justify-between mt-2 text-xs text-slate-500">
-                                            <span style={{ color: task.color }}>{task.category}</span>
-                                            <span>{task.duration}m</span>
+                                            <span style={{ color: task.color }}>{task.tagNames?.[0] || 'no tag'}</span>
+                                            <div className="flex items-center gap-1">
+                                                {task.aiEstimationStatus === 'loading' && (
+                                                    <span className="inline-block animate-pulse text-blue-400 font-bold" title="AI Estimating...">?</span>
+                                                )}
+                                                {task.aiEstimationStatus === 'success' && task.aiRecommendation === 'keep' && (
+                                                    <span className="text-green-400" title={task.aiReasoning || 'AI suggests keeping the time'}>✓</span>
+                                                )}
+                                                {task.aiEstimationStatus === 'success' && task.aiRecommendation === 'increase' && (
+                                                    <span className="text-yellow-400" title={task.aiReasoning || 'AI suggests more time'}>⚠</span>
+                                                )}
+                                                {task.aiEstimationStatus === 'error' && (
+                                                    <span className="text-red-400" title="AI Estimation Failed">❌</span>
+                                                )}
+                                                <span>{task.duration}m</span>
+                                            </div>
                                         </div>
                                     </div>
                                 ) : (

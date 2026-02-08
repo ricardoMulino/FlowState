@@ -53,27 +53,32 @@ class TaskCreate(BaseModel):
     task_client_id: str
     description: Optional[str] = None
     tag_names: Optional[List[str]] = None
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
+    start_time: Optional[str] = None
     duration: Optional[int] = 0
+    recurrence: Optional[str] = None
     is_completed: bool = False
     flowbot_suggest_duration: Optional[int] = None
     actual_duration: Optional[int] = None
     color: Optional[str] = None
-
+    socket_id: Optional[str] = None
 
 
 class TaskUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
-    db_id: str
     tag_names: Optional[List[str]] = None
-    start_time: Optional[datetime] = None
-    duration: Optional[int] = 0
+    start_time: Optional[str] = None
+    duration: Optional[int] = None
+    recurrence: Optional[str] = None
     is_completed: Optional[bool] = None
     flowbot_suggest_duration: Optional[int] = None
     actual_duration: Optional[int] = None
     color: Optional[str] = None
+    ai_estimation_status: Optional[str] = None
+    ai_time_estimation: Optional[int] = None
+    ai_recommendation: Optional[str] = None
+    ai_reasoning: Optional[str] = None
+    ai_confidence: Optional[str] = None
 
 
 class TaskDescriptionUpdate(BaseModel):
@@ -206,6 +211,30 @@ def get_client() -> MongoClient:
             detail="Database connection not available"
         )
     return mongo_client
+
+
+def serialize_task(task: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Serialize task dictionary for JSON response.
+    - Converts ObjectId to string
+    - Converts datetime objects to ISO strings with 'Z' suffix (UTC)
+    """
+    if not task:
+        return task
+        
+    # Convert _id
+    if "_id" in task:
+        task["_id"] = str(task["_id"])
+        
+    # Convert start_time to ISO string with Z
+    if "start_time" in task and isinstance(task["start_time"], datetime):
+        # Assume UTC if naive, as we store UTC
+        dt = task["start_time"]
+        # .isoformat() might return '2023-01-01T12:00:00' (no Z)
+        # We want '2023-01-01T12:00:00Z'
+        task["start_time"] = dt.strftime('%Y-%m-%dT%H:%M:%SZ')
+        
+    return task
 
 
 # ============================================================================
@@ -394,10 +423,7 @@ async def get_all_tasks():
     """Get all tasks"""
     client = get_client()
     tasks = db.get_all_tasks(client)
-    for task in tasks:
-        if "_id" in task:
-            task["_id"] = str(task["_id"])
-    return tasks
+    return [serialize_task(task) for task in tasks]
 
 
 @app.get("/api/tasks/{email}")
@@ -405,10 +431,7 @@ async def get_all_tasks_for_user(email: str):
     """Get all tasks for a specific user"""
     client = get_client()
     tasks = db.get_all_tasks_for_user(client, email)
-    for task in tasks:
-        if "_id" in task:
-            task["_id"] = str(task["_id"])
-    return tasks
+    return [serialize_task(task) for task in tasks]
 
 
 @app.get("/api/tasks/{email}/{title}")
@@ -418,9 +441,7 @@ async def get_task(email: str, title: str):
     task = db.get_task_by_title(client, email, title)
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found")
-    if "_id" in task:
-        task["_id"] = str(task["_id"])
-    return task
+    return serialize_task(task)
 
 
 @app.get("/api/tasks/by-id/{task_id}")
@@ -431,9 +452,7 @@ async def get_task_by_id(task_id: str):
         task = db.get_task_by_id(client, task_id)
         if task is None:
             raise HTTPException(status_code=404, detail="Task not found")
-        if "_id" in task:
-            task["_id"] = str(task["_id"])
-        return task
+        return serialize_task(task)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid task ID: {str(e)}")
 
@@ -467,48 +486,84 @@ async def get_tasks_by_tag(email: str, tag_name: str):
     """Get all tasks for a user with a specific tag"""
     client = get_client()
     tasks = db.get_tasks_by_tag(client, email, tag_name)
-    for task in tasks:
-        if "_id" in task:
-            task["_id"] = str(task["_id"])
-    return tasks
+    return [serialize_task(task) for task in tasks]
 
 
-@app.post("/api/tasks", status_code=status.HTTP_201_CREATED)
+class TaskCreate(BaseModel):
+    email: str
+    title: str
+    task_client_id: str
+    description: Optional[str] = None
+    tag_names: Optional[List[str]] = None
+    start_time: Optional[str] = None
+    duration: Optional[int] = 0
+    is_completed: bool = False
+    color: Optional[str] = None
+    ai_estimation_status: Optional[str] = None
+    ai_time_estimation: Optional[int] = None
+    ai_recommendation: Optional[str] = None
+    ai_reasoning: Optional[str] = None
+    ai_confidence: Optional[str] = None
+    socket_id: Optional[str] = None # Added for WebSocket updates
+
+@app.post("/api/tasks")
 async def create_task(task: TaskCreate, background_tasks: BackgroundTasks):
     """Create or update a task"""
     client = get_client()
     
-    # Calculate duration if end_time is provided
-    if task.duration == 0 and task.start_time and task.end_time:
-        delta = task.end_time - task.start_time
-        task.duration = int(delta.total_seconds() / 60) # minutes
+    # Calculate duration if end_time is provided (this logic was removed in the diff, but keeping it for context if it was intended to stay)
+    # if task.duration == 0 and task.start_time and task.end_time:
+    #     delta = task.end_time - task.start_time
+    #     task.duration = int(delta.total_seconds() / 60) # minutes
 
-    result = db.set_task(
+    # Parse start_time string to datetime if provided
+    start_time_dt = None
+    if task.start_time:
+        try:
+            # Handle ISO string with potential Z suffix
+            clean_time = task.start_time.replace('Z', '+00:00')
+            start_time_dt = datetime.fromisoformat(clean_time)
+        except Exception as e:
+            print(f"Error parsing start_time: {e}")
+            # Fallback to current time or keep as None? 
+            # If user sent bad time, maybe None is better or error.
+            # For now, let's allow it to fail to None if critical
+            pass
+
+    success = db.set_task(
         client, 
         task.email, 
         task.title, 
         task.task_client_id,
         task.description, 
-        task.tag_names,
-        task.start_time,
+        task.tag_names, 
+        start_time_dt, 
         task.duration,
+        task.recurrence,
         task.is_completed,
-        task.flowbot_suggest_duration,
-        task.actual_duration,
-        task.color
+        color=task.color,
+        ai_estimation_status=task.ai_estimation_status,
+        ai_time_estimation=task.ai_time_estimation,
+        ai_recommendation=task.ai_recommendation,
+        ai_reasoning=task.ai_reasoning,
+        ai_confidence=task.ai_confidence
     )
-    if not result:
+    if not success:
         raise HTTPException(status_code=500, detail="Failed to create task")
     
-    # Trigger background agent
-    from agent_utils import run_agent_background
-    background_tasks.add_task(
-        run_agent_background, 
-        task.task_client_id, 
-        task.email, 
-        task.title, 
-        task.description
-    )
+    # Run AI estimation in background if socket_id is provided
+    if task.socket_id:
+        from agent_utils import run_agent_background
+        background_tasks.add_task(
+            run_agent_background, 
+            task.socket_id,
+            task.task_client_id,
+            task.email, 
+            task.title, 
+            task.description,
+            task.tag_names or [],
+            task.duration or 30
+        )
     
     return {"message": "Task created successfully", "title": task.title}
 
@@ -519,6 +574,15 @@ async def update_task(task_id: str, updates: TaskUpdate):
     client = get_client()
     # Filter out None values to only update what was sent
     update_data = {k: v for k, v in updates.dict().items() if v is not None}
+    
+    # Handle start_time parsing if present
+    if "start_time" in update_data and isinstance(update_data["start_time"], str):
+        try:
+            clean_time = update_data["start_time"].replace('Z', '+00:00')
+            update_data["start_time"] = datetime.fromisoformat(clean_time)
+        except Exception:
+            # If parsing fails, remove it so we don't send bad data to DB
+            del update_data["start_time"]
     
     if not update_data:
         raise HTTPException(status_code=400, detail="No fields to update")
