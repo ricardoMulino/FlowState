@@ -3,7 +3,7 @@ import { CalendarGrid } from '../components/calendar/CalendarGrid';
 import { TaskSidebar } from '../components/sidebar/TaskSidebar';
 import { CreateTaskModal } from '../components/modals/CreateTaskModal';
 import { useTags } from '../hooks/useTags';
-import type { Category } from '../types/calendarTypes';
+import type { CategoryId, Category } from '../types/calendarTypes';
 import { CATEGORIES } from '../types/calendarTypes';
 import { DndContext, DragOverlay, defaultDropAnimationSideEffects } from '@dnd-kit/core';
 import { useDragAndDrop } from '../hooks/useDragAndDrop';
@@ -29,40 +29,6 @@ export const Dashboard = () => {
     } = useCalendar();
 
     const { tags } = useTags(email);
-    const { socketId, lastMessage } = useWebSocket();
-
-    // Listen for AI estimation results
-    useEffect(() => {
-        if (lastMessage?.type === 'agent_result' && lastMessage.task_client_id) {
-            console.log('AI Estimation received:', lastMessage);
-            const { task_client_id, duration, recommendation, reasoning, confidence } = lastMessage;
-
-            // Find the task by taskClientId (for new tasks) or id (fallback for older tasks)
-            const task = tasks.find(t => t.taskClientId === task_client_id || t.id === task_client_id);
-            if (task) {
-                const newEndTime = addMinutes(task.startTime, duration > 0 ? duration : task.duration);
-                updateTask(task.id, {
-                    duration: duration > 0 ? duration : task.duration,
-                    endTime: newEndTime,
-                    estimatedTime: duration,
-                    aiEstimationStatus: duration > 0 ? 'success' : 'error',
-                    aiTimeEstimation: duration,
-                    aiRecommendation: recommendation || 'keep',
-                    aiReasoning: reasoning,
-                    aiConfidence: confidence
-                });
-            } else {
-                console.warn('Task not found for AI estimation:', task_client_id);
-            }
-        } else if (lastMessage?.type === 'agent_error' && lastMessage.task_client_id) {
-            const task = tasks.find(t => t.taskClientId === lastMessage.task_client_id || t.id === lastMessage.task_client_id);
-            if (task) {
-                updateTask(task.id, {
-                    aiEstimationStatus: 'error'
-                });
-            }
-        }
-    }, [lastMessage, tasks, updateTask]);
 
     // Merge default categories with fetched tags
     // We treat tags as categories for now
@@ -79,7 +45,7 @@ export const Dashboard = () => {
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isDragExpanded, setIsDragExpanded] = useState(false);
-    const [filterTag, setFilterTag] = useState<string | 'all'>('all');
+    const [filterCategory, setFilterCategory] = useState<CategoryId | 'all'>('all');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
     // Calendar State
@@ -99,21 +65,19 @@ export const Dashboard = () => {
         .slice(0, 5);
 
     // Filter tasks for the calendar
-    const filteredTasks = filterTag === 'all'
+    const filteredTasks = filterCategory === 'all'
         ? tasks
-        : tasks.filter(t => t.tagNames?.includes(filterTag));
+        : tasks.filter(t => t.category === filterCategory || t.tagNames?.includes(filterCategory));
 
 
     const { sensors, activeTask, activeTemplate, handleDragStart, handleDragEnd } = useDragAndDrop({
         tasks,
         onTaskMove: moveTask,
-        onTaskCreate: (template, startTime, tag) => {
-            const clientId = window.crypto.randomUUID();
+        onTaskCreate: (template, startTime, category) => {
             addTask({
-                id: clientId,
-                taskClientId: clientId, // Same ID for WebSocket matching before fetch
+                id: window.crypto.randomUUID(),
                 title: template.title,
-                tagNames: tag ? [tag] : [],
+                category: category as CategoryId,
                 startTime,
                 endTime: new Date(startTime.getTime() + template.duration * 60000),
                 duration: template.duration,
@@ -121,9 +85,8 @@ export const Dashboard = () => {
                 isCompleted: false,
                 estimatedTime: template.duration,
                 recurrence: template.recurrence,
-                actualDuration: undefined,
-                aiEstimationStatus: 'loading'
-            }, socketId);
+                actualDuration: undefined
+            });
         }
     });
 
@@ -166,8 +129,8 @@ export const Dashboard = () => {
                     onOpenCreateModal={() => setIsCreateModalOpen(true)}
                     isOpen={isSidebarOpen || isDragExpanded}
                     onToggle={() => setIsSidebarOpen(prev => !prev)}
-                    filter={filterTag}
-                    onFilterChange={setFilterTag}
+                    filter={filterCategory}
+                    onFilterChange={setFilterCategory}
                     categories={dynamicCategories}
                 />
                 <main className="flex-1 overflow-hidden relative glass-panel rounded-2xl flex flex-col">
@@ -232,28 +195,25 @@ export const Dashboard = () => {
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
                 categories={dynamicCategories}
-                onSave={(title, duration, startTime, tag, description, isCompleted, actualDuration) => {
-                    const tagColor = dynamicCategories.find(c => c.id === tag)?.color || '#3b82f6';
+                onSave={(title, duration, startTime, category, description, isCompleted, actualDuration) => {
+                    const categoryColor = dynamicCategories.find(c => c.id === category)?.color || '#3b82f6';
                     const endTime = new Date(startTime);
                     endTime.setMinutes(endTime.getMinutes() + duration);
-                    const clientId = window.crypto.randomUUID();
 
                     addTask({
-                        id: clientId,
-                        taskClientId: clientId, // Same ID for WebSocket matching before fetch
+                        id: window.crypto.randomUUID(),
                         title,
                         description,
-                        tagNames: [tag],
+                        category,
                         startTime,
                         endTime,
                         duration,
-                        color: tagColor,
+                        color: categoryColor,
                         isCompleted,
                         estimatedTime: duration,
                         actualDuration,
-                        recurrence: undefined,
-                        aiEstimationStatus: 'loading'
-                    }, socketId);
+                        recurrence: undefined // or default
+                    });
                     setIsCreateModalOpen(false);
                 }}
             />
