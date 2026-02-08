@@ -31,9 +31,13 @@ export default function AuthPage() {
                 setMessage('Registration successful! Please check your email to confirm.')
             } else {
                 setMessage('Success! You are logged in.')
-                navigate('/')
+                navigate('/dash')
             }
         }
+    }
+
+    const cancelLogin = async () => {
+        navigate('/');
     }
 
     return (
@@ -71,6 +75,12 @@ export default function AuthPage() {
             <p onClick={() => setIsLoginView(!isLoginView)} style={{ cursor: 'pointer', color: 'blue' }}>
                 {isLoginView ? "Don't have an account? Sign Up" : "Already have an account? Login"}
             </p>
+
+            <button
+                onClick={cancelLogin}
+                className="w-full px-4 py-3 flex items-center gap-2 text-sm text-red-400 hover:bg-white/5 transition-colors text-left">
+                Back To Menu
+            </button>
         </div>
     )
 }

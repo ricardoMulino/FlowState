@@ -9,8 +9,13 @@ export const Header: React.FC = () => {
 
     const handleLogout = async () => {
         await signOutUser();
-        navigate('/login');
+        navigate('/');
     };
+
+    const switchAccount = async () => {
+        await signOutUser();
+        navigate('/login');
+    }
 
     return (
         <header className="flex items-center justify-between px-6 py-4 glass-panel rounded-2xl relative z-30">
@@ -37,12 +42,20 @@ export const Header: React.FC = () => {
                     {isMenuOpen && (
                         <div className="absolute right-0 top-12 w-48 bg-slate-900 border border-white/10 rounded-xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                             <button
+                                onClick={switchAccount}
+                                className="w-full px-4 py-3 flex items-center gap-2 text-sm text-white hover:bg-white/5 transition-colors text-left"
+                            >
+                                <LogOut className="w-4 h-4" />
+                                Switch Account
+                            </button>
+                            <button
                                 onClick={handleLogout}
                                 className="w-full px-4 py-3 flex items-center gap-2 text-sm text-red-400 hover:bg-white/5 transition-colors text-left"
                             >
                                 <LogOut className="w-4 h-4" />
                                 Sign Out
                             </button>
+
                         </div>
                     )}
                 </div>
