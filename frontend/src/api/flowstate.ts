@@ -227,7 +227,8 @@ export const taskAPI = {
         color?: string,
         taskClientId?: string,
         socketId?: string,
-        aiEstimationStatus?: string
+        aiEstimationStatus?: string,
+        duration?: number
     ): Promise<void> => {
         const response = await fetch(`${API_BASE}/tasks`, {
             method: 'POST',
@@ -243,7 +244,8 @@ export const taskAPI = {
                 recurrence,
                 color,
                 socket_id: socketId, // Pass to backend
-                ai_estimation_status: aiEstimationStatus
+                ai_estimation_status: aiEstimationStatus,
+                duration
             }),
         });
         if (!response.ok) throw new Error('Failed to create task');

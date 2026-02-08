@@ -60,6 +60,11 @@ class TaskCreate(BaseModel):
     flowbot_suggest_duration: Optional[int] = None
     actual_duration: Optional[int] = None
     color: Optional[str] = None
+    ai_estimation_status: Optional[str] = None
+    ai_time_estimation: Optional[int] = None
+    ai_recommendation: Optional[str] = None
+    ai_reasoning: Optional[str] = None
+    ai_confidence: Optional[str] = None
     socket_id: Optional[str] = None
 
 
@@ -489,22 +494,6 @@ async def get_tasks_by_tag(email: str, tag_name: str):
     return [serialize_task(task) for task in tasks]
 
 
-class TaskCreate(BaseModel):
-    email: str
-    title: str
-    task_client_id: str
-    description: Optional[str] = None
-    tag_names: Optional[List[str]] = None
-    start_time: Optional[str] = None
-    duration: Optional[int] = 0
-    is_completed: bool = False
-    color: Optional[str] = None
-    ai_estimation_status: Optional[str] = None
-    ai_time_estimation: Optional[int] = None
-    ai_recommendation: Optional[str] = None
-    ai_reasoning: Optional[str] = None
-    ai_confidence: Optional[str] = None
-    socket_id: Optional[str] = None # Added for WebSocket updates
 
 @app.post("/api/tasks")
 async def create_task(task: TaskCreate, background_tasks: BackgroundTasks):
@@ -660,24 +649,30 @@ async def delete_task_by_id(task_id: str):
 @app.post("/api/agent/chat")
 async def agent_chat(request: AgentChatRequest):
     """
-    Chat with the AI agent (PLACEHOLDER)
+    Chat with the AI agent.
     
-    This endpoint will integrate with agent.py's LangGraph chatbot.
-    Currently returns a placeholder response.
+    Integrates with search_agent.py to handle URL scraping and chat.
     """
-    # TODO: Integrate with agent.py
-    # from agent import graph
-    # result = graph.invoke({
-    #     "messages": [("user", request.message)],
-    #     "user_id": request.user_id
-    # })
+    from search_agent import build_search_agent_graph
+    from langchain_core.messages import HumanMessage
     
-    return {
-        "message": "Agent chat endpoint - Coming soon!",
-        "user_message": request.message,
-        "user_id": request.user_id,
-        "response": "This is a placeholder. Integration with agent.py pending."
-    }
+    try:
+        graph = build_search_agent_graph()
+        result = graph.invoke({
+            "messages": [HumanMessage(content=request.message)]
+        })
+        
+        last_message = result['messages'][-1].content
+        
+        return {
+            "message": "Success",
+            "user_message": request.message,
+            "user_id": request.user_id,
+            "response": last_message
+        }
+    except Exception as e:
+        print(f"Error in agent chat: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/agent/retrieve")

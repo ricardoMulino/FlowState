@@ -735,26 +735,27 @@ def run_full_verification(client: MongoClient):
 
 
 
-""" main is used as a sort of verification in the DB!
-"""
-load_dotenv()
-MONGO_URI = os.getenv("MONGO_URI")
-client = MongoClient(MONGO_URI)
-
-# Run seed_tags to create persistent tags for verification
-# seed_tags(client)
-
-# Uncomment below to run full verification (creates and cleans up test data)
-# Run a simple test
-set_task(
-    client, 
-    "test@mulino.com", 
-    "Implement authentication system", 
-    "test-auth-1",
-    "Build JWT-based authentication with refresh tokens and role-based access control", 
-    ["work"]
-)
-client.close()
+if __name__ == "__main__":
+    """ main is used as a sort of verification in the DB!
+    """
+    load_dotenv()
+    MONGO_URI = os.getenv("MONGO_URI")
+    client = MongoClient(MONGO_URI)
+    
+    # Run seed_tags to create persistent tags for verification
+    # seed_tags(client)
+    
+    # Uncomment below to run full verification (creates and cleans up test data)
+    # Run a simple test
+    set_task(
+        client, 
+        "test@mulino.com", 
+        "Implement authentication system", 
+        "test-auth-1",
+        "Build JWT-based authentication with refresh tokens and role-based access control", 
+        ["work"]
+    )
+    client.close()
 
 def update_task_ai_estimation(
     client: MongoClient,
