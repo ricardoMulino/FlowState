@@ -5,3 +5,5 @@ pymongo
 pydantic
 fastapi
 uvicorn[standard]
+motor
+pydantic-settings

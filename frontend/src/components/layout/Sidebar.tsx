@@ -7,7 +7,7 @@ import {
     Settings,
     LogOut
 } from 'lucide-react';
-import { signOutUser } from '../../auth';
+import { signOutUser } from '../../pages/auth';
 
 export const Sidebar: React.FC = () => {
     const navigate = useNavigate();
@@ -18,9 +18,9 @@ export const Sidebar: React.FC = () => {
     };
 
     const navItems = [
-        { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
-        { icon: Calendar, label: 'Calendar', path: '/calendar' }, // Assuming route exists or will exist
-        { icon: CheckSquare, label: 'Tasks', path: '/tasks' },    // Assuming route exists or will exist
+        { icon: LayoutDashboard, label: 'Dashboard', path: '/dash' },
+        { icon: Calendar, label: 'Tags', path: '/tags' },
+        { icon: CheckSquare, label: 'Tasks', path: '/tasks' },
         { icon: Settings, label: 'Settings', path: '/settings' },
     ];
 
