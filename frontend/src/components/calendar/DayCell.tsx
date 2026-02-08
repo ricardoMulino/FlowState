@@ -1,23 +1,21 @@
 import React from 'react';
-import type { Task, CategoryId } from '../../types/calendarTypes';
+import type { Task, CategoryId } from '../../types/calendar';
 import { SmoothDraggableTask } from './SmoothDraggableTask';
 import { SnapGrid } from './SnapGrid';
 
 interface DayCellProps {
-    date: Date;
+    day: Date;
     category: CategoryId;
     tasks: Task[];
-    color: string;
 }
 
 export const DayCell: React.FC<DayCellProps> = ({
-    date,
+    day,
     category,
-    tasks,
-    color
+    tasks
 }) => {
     return (
-        <SnapGrid date={date} category={category}>
+        <SnapGrid date={day} category={category}>
             <div className="relative h-full">
                 {tasks.map((task) => (
                     <div

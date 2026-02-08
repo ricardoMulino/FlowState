@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { signOutUser } from '../../auth';
 
-const Sidebar: React.FC = () => {
+export const Sidebar: React.FC = () => {
     const navigate = useNavigate();
 
     const handleLogout = async () => {
@@ -65,5 +65,3 @@ const Sidebar: React.FC = () => {
         </aside>
     );
 };
-
-export default Sidebar;

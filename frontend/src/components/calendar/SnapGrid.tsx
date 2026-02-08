@@ -1,7 +1,7 @@
 import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { cn } from '../../lib/utils';
-import type { CategoryId } from '../../types/calendarTypes';
+import type { CategoryId } from '../../types/calendar';
 
 interface SnapGridProps {
     date: Date;
@@ -32,6 +32,7 @@ export const SnapGrid: React.FC<SnapGridProps> = ({
             className={cn(
                 "relative h-[720px] w-full",
                 "transition-colors duration-200",
+                "bg-slate-950/20", // Default background to ensure drop zone is visible/interactive
                 isOver && "bg-white/10"
             )}
         >
