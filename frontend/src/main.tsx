@@ -13,6 +13,8 @@ import { ProtectedRoute } from './components/ProtectedRoute.tsx'
 import { Dashboard } from './pages/Dashboard.tsx'
 import { Tags } from './pages/Tags.tsx'
 import Dash from './dash.tsx'
+import Tasks from './tasks.tsx'
+import Settings from './settingMenu.tsx'
 
 const router = createBrowserRouter([
   {
@@ -68,6 +70,34 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <Dash />,
+      },
+    ],
+  },
+  {
+    path: "/tasks",
+    element: (
+      <ProtectedRoute>
+        <App />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        index: true,
+        element: <Tasks />,
+      },
+    ],
+  },
+  {
+    path: "/settings",
+    element: (
+      <ProtectedRoute>
+        <App />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        index: true,
+        element: <Settings />,
       },
     ],
   }
