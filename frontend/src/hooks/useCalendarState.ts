@@ -56,7 +56,8 @@ export function useCalendarState(userEmail: string | null) {
                 task.color,
                 task.id, // Pass task_client_id
                 socketId, // Pass socket_id
-                task.aiEstimationStatus
+                task.aiEstimationStatus,
+                task.duration
             );
             // Refresh to get ID (though WebSocket might beat it)
             fetchTasks();
