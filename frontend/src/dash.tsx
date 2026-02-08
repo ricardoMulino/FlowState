@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from './contexts/AuthContext';
+import { useState, useEffect } from 'react';
+// import { useAuth } from './contexts/AuthContext';
 import { useCalendar } from './contexts/CalendarContext';
 import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSameMonth, startOfWeek, endOfWeek } from 'date-fns';
 import { cn } from './lib/utils';
-import { motion } from 'framer-motion';
-import { AlertCircle, CheckCircle2, Circle, Clock } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 
 export default function Dash() {
     // const { email } = useAuth(); // Not needed if tasks come from context (which has auth)
@@ -153,7 +152,7 @@ export default function Dash() {
                                                 <h3 className="font-semibold text-slate-200 text-lg mb-1">{task.title}</h3>
                                                 <div className="flex items-center gap-2 text-xs text-slate-400 mb-3">
                                                     <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/5 text-slate-300" style={{ color: task.color, borderColor: `${task.color}30`, backgroundColor: `${task.color}10` }}>
-                                                        {task.category}
+                                                        {task.tagNames?.[0]}
                                                     </span>
                                                     <span>•</span>
                                                     <span>{format(task.startTime, 'h:mm a')} - {format(task.endTime, 'h:mm a')}</span>

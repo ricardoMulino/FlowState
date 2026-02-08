@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, type ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { useCalendarState } from '../hooks/useCalendarState';
-import type { Task, CategoryId } from '../types/calendarTypes';
+import type { Task } from '../types/calendarTypes';
 
 interface CalendarContextType {
     currentDate: Date;
@@ -9,12 +9,11 @@ interface CalendarContextType {
     timeZone: string;
     setTimeZone: (tz: string) => void;
     tasks: Task[];
-    addTask: (task: Task) => Promise<void>;
+    addTask: (task: Task, socketId?: string) => Promise<void>;
     updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
-    moveTask: (id: string, newStartTime: Date, newCategory?: CategoryId) => void;
+    moveTask: (id: string, newStartTime: Date, newTag?: string) => void;
     resizeTask: (id: string, newDuration: number) => void;
     deleteTask: (id: string) => Promise<void>;
-    getTasksForDayAndCategory: (date: Date, categoryId: CategoryId) => Task[];
 }
 
 const CalendarContext = createContext<CalendarContextType | undefined>(undefined);

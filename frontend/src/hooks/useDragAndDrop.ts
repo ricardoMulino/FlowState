@@ -74,7 +74,7 @@ export function useDragAndDrop({ tasks, onTaskMove, onTaskCreate }: UseDragAndDr
         const overData = over.data.current as {
             type: string;
             date?: Date;
-            category?: string
+            tag?: string
         } | undefined;
 
         if (overData?.type === 'calendar-cell' && overData.date) {
@@ -164,7 +164,7 @@ export function useDragAndDrop({ tasks, onTaskMove, onTaskCreate }: UseDragAndDr
                 // Collision Check
                 checkAndPushCollisions(
                     tasks,
-                    { id: 'temp-new', startTime: newStartTime, duration: activeTemplate.duration, tag: (overData.category || activeTemplate.category) }
+                    { id: 'temp-new', startTime: newStartTime, duration: activeTemplate.duration, tag: (overData.tag || activeTemplate.category) }
                 );
 
                 // Create the new task (possibly shifted if it was pushed by an earlier task)
@@ -211,7 +211,8 @@ export function useDragAndDrop({ tasks, onTaskMove, onTaskCreate }: UseDragAndDr
                     }
                 }
 
-                onTaskCreate(activeTemplate, adjustedStartTime, (overData.category || activeTemplate.category));
+                // We treat template.category as the default tag
+                onTaskCreate(activeTemplate, adjustedStartTime, (overData.tag || activeTemplate.category));
 
                 // What about pushing later tasks?
                 // The newly created task might overlap later tasks.
@@ -259,7 +260,7 @@ export function useDragAndDrop({ tasks, onTaskMove, onTaskCreate }: UseDragAndDr
                 onTaskMove(
                     active.id as string,
                     adjustedStartTime,
-                    (overData.category || (activeTask.tagNames?.[0]))
+                    (overData.tag || (activeTask.tagNames?.[0]))
                 );
 
                 // 3. Check for later tasks that are now overlapped by Active Task's new position

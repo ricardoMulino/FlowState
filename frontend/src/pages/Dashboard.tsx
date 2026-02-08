@@ -3,7 +3,7 @@ import { CalendarGrid } from '../components/calendar/CalendarGrid';
 import { TaskSidebar } from '../components/sidebar/TaskSidebar';
 import { CreateTaskModal } from '../components/modals/CreateTaskModal';
 import { useTags } from '../hooks/useTags';
-import type { CategoryId, Category } from '../types/calendarTypes';
+import type { Category } from '../types/calendarTypes';
 import { CATEGORIES } from '../types/calendarTypes';
 import { DndContext, DragOverlay, defaultDropAnimationSideEffects } from '@dnd-kit/core';
 import { useDragAndDrop } from '../hooks/useDragAndDrop';
@@ -45,7 +45,7 @@ export const Dashboard = () => {
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isDragExpanded, setIsDragExpanded] = useState(false);
-    const [filterCategory, setFilterCategory] = useState<CategoryId | 'all'>('all');
+    const [filterCategory, setFilterCategory] = useState<string | 'all'>('all');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
     // Calendar State
@@ -67,7 +67,7 @@ export const Dashboard = () => {
     // Filter tasks for the calendar
     const filteredTasks = filterCategory === 'all'
         ? tasks
-        : tasks.filter(t => t.category === filterCategory || t.tagNames?.includes(filterCategory));
+        : tasks.filter(t => t.tagNames?.includes(filterCategory));
 
 
     const { sensors, activeTask, activeTemplate, handleDragStart, handleDragEnd } = useDragAndDrop({
@@ -77,7 +77,7 @@ export const Dashboard = () => {
             addTask({
                 id: window.crypto.randomUUID(),
                 title: template.title,
-                category: category as CategoryId,
+                tagNames: [category as string],
                 startTime,
                 endTime: new Date(startTime.getTime() + template.duration * 60000),
                 duration: template.duration,
@@ -204,7 +204,7 @@ export const Dashboard = () => {
                         id: window.crypto.randomUUID(),
                         title,
                         description,
-                        category,
+                        tagNames: [category],
                         startTime,
                         endTime,
                         duration,

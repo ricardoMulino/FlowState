@@ -104,7 +104,7 @@ const router = createBrowserRouter([
   }
 ]);
 
-import { WebSocketProvider } from './contexts/WebSocketContext.tsx'
+// import { WebSocketProvider } from './contexts/WebSocketContext.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
