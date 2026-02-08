@@ -10,6 +10,7 @@ from time_estimation_agent import build_time_estimation_graph
 
 
 def estimate_task_time(
+    id: str,
     email: str,
     task_title: str,
     task_description: str,
@@ -55,6 +56,7 @@ def estimate_task_time(
     
     # Prepare initial state
     initial_state = {
+        "id": id,
         "task_title": task_title,
         "task_description": task_description,
         "tag_name": tag_name,
@@ -87,11 +89,12 @@ print("TASK TIME ESTIMATOR - Example Usage")
 print("="*60)
 
 result = estimate_task_time(
+    id="3okjfa",
     email="test@example.com",
     task_title="Implement user dashboard",
     task_description="Create a responsive dashboard with charts and user statistics",
-    tag_name="frontend",
-    tag_description="Frontend development and UI work",
+    tag_name="work",
+    tag_description="Work tasks",
     initial_estimate_minutes=180  # 3 hours
 )
 

@@ -21,21 +21,27 @@ DB_NAME = "flowstate_db"
 # EMBEDDING UTILITIES
 # =============================================================================
 
-def _generate_tag_embedding(tag_description: str) -> Optional[List[float]]:
+
+def _generate_embedding(text: str) -> Optional[List[float]]:
     """
-    Generates a vector embedding for a tag description using Gemini.
-    Returns None if description is empty or embedding generation fails.
+    Generates a vector embedding for text using Gemini.
+    Returns None if text is empty or embedding generation fails.
     """
-    if not tag_description or not tag_description.strip():
+    if not text or not text.strip():
         return None
     
     try:
         from langchain_google_genai import GoogleGenerativeAIEmbeddings
         embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
-        return embeddings.embed_query(tag_description)
+        return embeddings.embed_query(text)
     except Exception as e:
-        print(f"Warning: Failed to generate embedding for tag: {e}")
+        print(f"Warning: Failed to generate embedding: {e}")
         return None
+
+
+def _generate_tag_embedding(tag_description: str) -> Optional[List[float]]:
+    """Wrapper for _generate_embedding to maintain backward compatibility if needed."""
+    return _generate_embedding(tag_description)
 
 
 # =============================================================================
@@ -256,37 +262,32 @@ def set_task(
     email: str, 
     title: str, 
     description: Optional[str] = None, 
-    tag_names: Optional[List[str]] = None,
-    start_time: Optional[Any] = None,
-    end_time: Optional[Any] = None,
-    is_completed: bool = False,
-    recurrence: Optional[str] = None
+    tag_names: Optional[List[str]] = None
 ) -> bool:
     """
     Creates or updates a task. 
     - title is required
-    - description, tag_names, times, recurrence are optional
+    - description and tag_names are optional
     Returns True if the operation was successful.
     """
     db = client[DB_NAME]
     collection = db["tasks"]
     
-    update_data = {
-        "email": email, 
-        "title": title,
-        "is_completed": is_completed
-    }
-    
+    update_data = {"email": email, "title": title}
     if description is not None:
         update_data["description"] = description
     if tag_names is not None:
         update_data["tag_names"] = tag_names
-    if start_time is not None:
-        update_data["start_time"] = start_time
-    if end_time is not None:
-        update_data["end_time"] = end_time
-    if recurrence is not None:
-        update_data["recurrence"] = recurrence
+    
+    # Generate embedding for vector search using title and description
+    # Combine title and description for better context
+    embedding_text = title
+    if description:
+        embedding_text += f": {description}"
+    
+    embedding = _generate_embedding(embedding_text)
+    if embedding is not None:
+        update_data["embedding"] = embedding
     
     result = collection.update_one(
         {"email": email, "title": title},
@@ -294,36 +295,6 @@ def set_task(
         upsert=True
     )
     return result.acknowledged
-
-
-def update_task_fields(client: MongoClient, task_id: str, updates: Dict[str, Any]) -> bool:
-    """
-    Updates specific fields of a task using its _id.
-    """
-    from bson import ObjectId
-    db = client[DB_NAME]
-    collection = db["tasks"]
-    
-    # potentially filter out _id from updates if passed
-    if "_id" in updates:
-        del updates["_id"]
-
-    result = collection.update_one(
-        {"_id": ObjectId(task_id)},
-        {"$set": updates}
-    )
-    return result.acknowledged
-
-
-def delete_task_by_id(client: MongoClient, task_id: str) -> bool:
-    """
-    Deletes a task by its _id.
-    """
-    from bson import ObjectId
-    db = client[DB_NAME]
-    collection = db["tasks"]
-    result = collection.delete_one({"_id": ObjectId(task_id)})
-    return result.deleted_count > 0
 
 
 def set_task_description(client: MongoClient, email: str, title: str, description: str) -> bool:
@@ -334,9 +305,22 @@ def set_task_description(client: MongoClient, email: str, title: str, descriptio
     db = client[DB_NAME]
     collection = db["tasks"]
     
+    update_data = {"description": description}
+    
+    # Regenerate embedding since description changed
+    # Need to fetch title or just update based on new description? 
+    # Ideally should include title, but for now let's just use description if title isn't easily available 
+    # OR we could just append to the set query if we had strict consistency.
+    # To be safe and simple, let's just embed the description or try to fetch title. 
+    # For efficiency, let's just embed the new description joined with the title which is passed in.
+    embedding_text = f"{title}: {description}"
+    embedding = _generate_embedding(embedding_text)
+    if embedding is not None:
+        update_data["embedding"] = embedding
+
     result = collection.update_one(
         {"email": email, "title": title},
-        {"$set": {"description": description}}
+        {"$set": update_data}
     )
     return result.acknowledged
 
@@ -556,19 +540,19 @@ def run_full_verification(client: MongoClient):
     # --- CLEANUP ---
     print("\n--- CLEANUP ---")
     
-    # Delete test data
-    delete_task(client, test_email, "Complete project")
-    delete_task(client, test_email, "Buy groceries")
-    delete_task(client, test_email, "Quick note")
-    print("  Deleted all test tasks")
+    # # Delete test data
+    # delete_task(client, test_email, "Complete project")
+    # delete_task(client, test_email, "Buy groceries")
+    # delete_task(client, test_email, "Quick note")
+    # print("  Deleted all test tasks")
     
-    delete_tag(client, test_email, "work")
-    delete_tag(client, test_email, "personal")
-    delete_tag(client, test_email, "urgent")
-    print("  Deleted all test tags")
+    # delete_tag(client, test_email, "work")
+    # delete_tag(client, test_email, "personal")
+    # delete_tag(client, test_email, "urgent")
+    # print("  Deleted all test tags")
     
-    delete_user(client, test_email)
-    print("  Deleted test user")
+    # delete_user(client, test_email)
+    # print("  Deleted test user")
     
     # Verify cleanup
     user = get_user(client, test_email)
@@ -579,17 +563,19 @@ def run_full_verification(client: MongoClient):
     print("=" * 60)
 
 
-if __name__ == "__main__":
-    """ main is used as a sort of verification in the DB!
-    """
-    load_dotenv()
-    MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
-    client = MongoClient(MONGO_URI)
-    
-    # Run seed_tags to create persistent tags for verification
-    # seed_tags(client)
-    
-    # Uncomment below to run full verification (creates and cleans up test data)
-    # run_full_verification(client)
-    
-    client.close()
+
+""" main is used as a sort of verification in the DB!
+"""
+load_dotenv()
+MONGO_URI = os.getenv("MONGO_URI")
+client = MongoClient(MONGO_URI)
+
+# Run seed_tags to create persistent tags for verification
+# seed_tags(client)
+
+# Uncomment below to run full verification (creates and cleans up test data)
+set_task(client, "test@example.com", "Implement authentication system", "Build JWT-based authentication with refresh tokens and role-based access control", ["work"])
+set_task(client, "test@example.com", "Implement authentication system", "Build JWT-based authentication with refresh tokens and role-based access control", ["work"])
+set_task(client, "test@example.com", "Implement authentication system", "Build JWT-based authentication with refresh tokens and role-based access control", ["work"])
+set_task(client, "test@example.com", "Implement authentication system", "Build JWT-based authentication with refresh tokens and role-based access control", ["work"])
+client.close()

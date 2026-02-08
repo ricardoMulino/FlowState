@@ -16,17 +16,18 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 from langchain_core.messages import SystemMessage, HumanMessage
 from pymongo import MongoClient
+from langchain_mongodb import MongoDBAtlasVectorSearch
 
 
 # Load environment variables
 load_dotenv()
 
 # Configuration
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+MONGO_URI = os.getenv("MONGO_URI")
 DB_NAME = "flowstate_db"
 client = MongoClient(MONGO_URI)
 db = client["flowstate_db"]
-collection = db["flowstate_events"]
+collection = db["tasks"]
 
 
 # Initialize LLM (using Gemini 2.5 Flash as per user rules)
@@ -41,6 +42,7 @@ embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
 class TimeEstimationState(TypedDict):
     """State for the time estimation agent pipeline."""
     # Input fields
+    id: str
     task_title: str
     task_description: str
     tag_name: str
@@ -67,70 +69,54 @@ class TimeEstimationState(TypedDict):
 # =============================================================================
 
 
-def retrieve_tasks(state: TimeEstimationState):
-    """Retrieves relevant events based on the user's latest message using Atlas Vector Search."""
-    query = state["tag_description"]
-    
-    # 1. Generate query embedding
-    print(f"Searching for: {query}")
-    query_vec = embeddings.embed_query(query)
-    
-    # 2. Define Atlas Vector Search Pipeline
-    pipeline = [
-        {
-            "$vectorSearch": {
-                "index": "vector_index",
-                "path": "embedding",
-                "queryVector": query_vec,
-                "numCandidates": 100,
-                "limit": 4,
-                "filter": {"tags": state["tag_name"]} 
-            }
-        },
-        {
-            "$project": {
-                "_id": 0,
-                "title": 1,
-                "description": 1,
-                "start_time": 1,
-                "score": {"$meta": "vectorSearchScore"}
-            }
-        }
-    ]
-    
-    # 3. Execute Search
-    try:
-        results = list(collection.aggregate(pipeline))
-    except Exception as e:
-        print(f"Error executing vector search: {e}")
-        return {"context": ["Error retrieving events."]}
-    
-    if not results:
-        return {"context": ["No events found."]}
-
-
-# =============================================================================
-# PIPELINE NODES
-# =============================================================================
-
 def find_similar_tasks_node(state: TimeEstimationState) -> Dict[str, Any]:
     """
-    Node 1: Find similar tasks with the same tag using vector search on task descriptions.
-    Searches for tasks that have the same tag and similar descriptions.
+    Node 1: Find similar tasks with the same tag using Atlas Vector Search.
+    Uses the langchain_mongodb vector store class.
     """
     print(f"\n[Node 1] Finding similar tasks with tag '{state['tag_name']}'...")
     
-    # Use the task description to find similar tasks with the same tag
-    #similar_tasks = vector_search_tasks_by_tag(
-    #     query=state["task_description"],
-    #     email=state["email"],
-    #     tag_name=state["tag_name"],
-    #     limit=4
-    # )
-    similar_tasks = retrieve_tasks(state)
+    # Initialize the vector store
+    vector_store = MongoDBAtlasVectorSearch(
+        collection=collection,
+        embedding=embeddings,
+        index_name="default",
+        embedding_key="embedding",
+        text_key="description",
+        relevance_score_fn="cosine"
+    )
     
-    print(f"Found {len(similar_tasks)} similar tasks with the same tag")
-    return {"historical_tasks": similar_tasks}
+    # Define the filter to ensure we only get tasks with the same tag
+    # Using pre_filter for performance
+    search_filter = {
+        "$and": [
+            {"tag_names": {"$eq": state["tag_name"]}},
+            {"_id": {"$ne": state["id"]}}
+        ]
+    }
+    
+    try:
+        # Perform similarity search
+        # k=4 as per user request in previous conversations
+        docs = vector_store.similarity_search(
+            query=state["task_description"],
+            k=4,
+            pre_filter=search_filter
+        )
+        
+        # Convert List[Document] to List[Dict] for easier LLM processing in the next node
+        historical_tasks = []
+        for doc in docs:
+            task_dict = doc.metadata.copy()
+            task_dict["description"] = doc.page_content
+            historical_tasks.append(task_dict)
+            
+        print(f"Found {len(historical_tasks)} similar tasks with the same tag")
+        return {"historical_tasks": historical_tasks}
+
+    except Exception as e:
+        print(f"Error executing vector search: {e}")
+        return {"historical_tasks": []}
 
 
 
@@ -144,6 +130,7 @@ def estimate_time_node(state: TimeEstimationState) -> Dict[str, Any]:
     
     # Prepare context from historical tasks
     historical_tasks = state.get("historical_tasks", [])
+    print(historical_tasks)
     
     # Build context string
     context_parts = []
@@ -172,6 +159,7 @@ def estimate_time_node(state: TimeEstimationState) -> Dict[str, Any]:
         context_parts.append("\nNo historical tasks found for similar tags.")
     
     context_str = "\n".join(context_parts)
+    print(context_str)
     
     # Create LLM prompt
     system_prompt = f"""You are a time estimation expert helping users allocate appropriate time for their tasks.
@@ -187,7 +175,8 @@ Current Task:
 - Tag: {state['tag_name']} - {state['tag_description']}
 - User's Initial Estimate: {state['estimated_time']} minutes
 
-{context_str}
+Historical Tasks:{historical_tasks}
+Historical Time Statistics:{context_str}
 
 Analyze the historical data and provide:
 1. Recommendation: "increase" or "keep" (NEVER "decrease")
@@ -286,12 +275,13 @@ def build_time_estimation_graph():
 # =============================================================================
 
 if __name__ == "__main__":
+    import json
     # Example usage
     initial_state = {
         "task_title": "Implement authentication system",
         "task_description": "Build JWT-based authentication with refresh tokens and role-based access control",
-        "tag_name": "coding",
-        "tag_description": "Programming and software development tasks",
+        "tag_name": "work",
+        "tag_description": "Work related tasks",
         "email": "test@example.com",
         "estimated_time": 120,  # 2 hours
         "similar_tags": [],
@@ -318,3 +308,12 @@ if __name__ == "__main__":
     print(f"\nReasoning:")
     print(result.get('reasoning', 'N/A'))
     print("="*60)
+
+    # Save result to JSON for verification
+    import json
+    with open("agent_result.json", "w") as f:
+        # Filter out non-serializable objects (like messages)
+        serializable_result = {k: v for k, v in result.items() if k != "messages"}
+        serializable_result["similar_tasks_count"] = len(result.get("historical_tasks", []))
+        json.dump(serializable_result, f, indent=2)
+    print("Result saved to agent_result.json")
