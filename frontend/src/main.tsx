@@ -12,6 +12,7 @@ import { ProtectedRoute } from './components/ProtectedRoute.tsx'
 
 import { Dashboard } from './pages/Dashboard.tsx'
 import { Tags } from './pages/Tags.tsx'
+import Dash from './dash.tsx'
 
 const router = createBrowserRouter([
   {
@@ -29,7 +30,7 @@ const router = createBrowserRouter([
     element: <AuthPage />,
   },
   {
-    path: "/dash",
+    path: "/calendar",
     element: (
       <ProtectedRoute>
         <App />
@@ -53,6 +54,20 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <Tags />,
+      },
+    ],
+  },
+  {
+    path: "/dash",
+    element: (
+      <ProtectedRoute>
+        <App />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        index: true,
+        element: <Dash />,
       },
     ],
   }
