@@ -17,6 +17,7 @@ from langgraph.graph.message import add_messages
 from langchain_core.messages import SystemMessage, HumanMessage
 from pymongo import MongoClient
 from langchain_mongodb import MongoDBAtlasVectorSearch
+from pydantic import BaseModel, Field
 
 
 # Load environment variables
@@ -36,6 +37,30 @@ llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
 embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
 
 # =============================================================================
+# STRUCTURED OUTPUT MODEL
+# =============================================================================
+
+class TimeEstimationResponse(BaseModel):
+    """Structured response from the LLM for time estimation."""
+    recommendation: Literal["increase", "keep"] = Field(
+        description="Whether to increase or keep the estimated time. NEVER decrease."
+    )
+    suggested_minutes: int = Field(
+        description="Suggested time in minutes (must be >= initial estimate)",
+        ge=0
+    )
+    suggested_cost: int = Field(
+        description="Suggested cost in USD (must be >= initial cost estimate)",
+        ge=0
+    )
+    confidence: Literal["high", "medium", "low"] = Field(
+        description="Confidence level in the recommendation"
+    )
+    reasoning: str = Field(
+        description="Detailed reasoning for the recommendation based on historical data"
+    )
+
+# =============================================================================
 # STATE DEFINITION
 # =============================================================================
 
@@ -49,6 +74,7 @@ class TimeEstimationState(TypedDict):
     tag_description: str
     email: str
     estimated_time: int  # User's initial estimate in minutes
+    estimated_cost: int # User's initial estimated cost in USD
     
     # Intermediate results
     similar_tags: List[Dict[str, Any]]
@@ -60,9 +86,9 @@ class TimeEstimationState(TypedDict):
     # Final output
     recommendation: Literal["increase", "keep"]
     suggested_minutes: int
+    suggested_cost: int
     reasoning: str
     confidence: Literal["high", "medium", "low"]
-
 
 # =============================================================================
 # Vector Search
@@ -125,6 +151,7 @@ def find_similar_tasks_node(state: TimeEstimationState) -> Dict[str, Any]:
 def estimate_time_node(state: TimeEstimationState) -> Dict[str, Any]:
     """
     Node 2: Use LLM to analyze historical data and suggest time allocation.
+    Uses LangGraph's structured output with Pydantic for reliable response parsing.
     """
     print(f"\n[Node 2] Analyzing with LLM...")
     
@@ -137,16 +164,21 @@ def estimate_time_node(state: TimeEstimationState) -> Dict[str, Any]:
     
     # Add historical task durations
     if historical_tasks:
-        context_parts.append("\nHistorical task completion times:")
+        context_parts.append("\nHistorical task completion times and costs:")
         durations = []
+        costs = []
         for task in historical_tasks:
             title = task.get("title", "Untitled")
             duration = task.get("duration")
+            cost = task.get("cost")
             tags = task.get("tags", [])
             
             if duration:
                 durations.append(duration)
                 context_parts.append(f"  - '{title}' (tags: {', '.join(tags)}): {duration} minutes")
+            if cost:
+                costs.append(cost)
+                context_parts.append(f"  - '{title}' (tags: {', '.join(tags)}): {cost} USD")
         
         if durations:
             avg_duration = sum(durations) / len(durations)
@@ -155,98 +187,69 @@ def estimate_time_node(state: TimeEstimationState) -> Dict[str, Any]:
             context_parts.append(f"\nStatistics:")
             context_parts.append(f"  Average: {avg_duration:.1f} minutes")
             context_parts.append(f"  Range: {min_duration}-{max_duration} minutes")
+        if costs:
+            avg_cost = sum(costs) / len(costs)
+            max_cost = max(costs)
+            min_cost = min(costs)
+            context_parts.append(f"\nStatistics:")
+            context_parts.append(f"  Average: {avg_cost:.1f} USD")
+            context_parts.append(f"  Range: {min_cost}-{max_cost} USD")
     else:
         context_parts.append("\nNo historical tasks found for similar tags.")
     
     context_str = "\n".join(context_parts)
     print(context_str)
     
-    # Create LLM prompt
+    # Create structured LLM
+    structured_llm = llm.with_structured_output(TimeEstimationResponse)
+    
+    # Create LLM prompt - simplified since we're using structured output
     system_prompt = f"""You are a time estimation expert helping users allocate appropriate time for their tasks.
 
 CRITICAL RULES:
 1. You can ONLY recommend to "increase" or "keep" the estimated time
 2. You must NEVER suggest decreasing the time estimate
 3. Base your recommendation on historical data and task complexity
+4. The suggested_minutes must be >= {state['estimated_time']}
+5. The suggested_cost must be >= {state['estimated_cost']}
 
 Current Task:
 - Title: {state['task_title']}
 - Description: {state['task_description']}
 - Tag: {state['tag_name']} - {state['tag_description']}
 - User's Initial Estimate: {state['estimated_time']} minutes
+- User's Initial Cost: {state['estimated_cost']} USD
 
-Historical Tasks:{historical_tasks}
-Historical Time Statistics:{context_str}
+{context_str}
 
-Analyze the historical data and provide:
-1. Recommendation: "increase" or "keep" (NEVER "decrease")
-2. Suggested time in minutes (must be >= initial estimate)
-3. Clear reasoning based on the data
-4. Confidence level: "high", "medium", or "low"
-
-Format your response as:
-RECOMMENDATION: [increase/keep]
-SUGGESTED_TIME: [number] minutes
-CONFIDENCE: [high/medium/low]
-REASONING: [your detailed reasoning]
+Analyze the historical data and provide your structured recommendation.
 """
 
-    user_message = f"Should I adjust my {state['estimated_time']}-minute estimate for this task?"
+    user_message = f"Should I adjust my {state['estimated_time']}-minute and ${state['estimated_cost']} estimate for this task?"
     
     messages = [
         SystemMessage(content=system_prompt),
         HumanMessage(content=user_message)
     ]
     
-    # Invoke LLM
-    response = llm.invoke(messages)
-    response_text = response.content
+    # Invoke LLM with structured output
+    response = structured_llm.invoke(messages)
     
-    # Parse LLM response
-    recommendation = "keep"
-    suggested_minutes = state["estimated_time"]
-    confidence = "medium"
-    reasoning = response_text
+    # Ensure constraints are met (belt and suspenders approach)
+    suggested_minutes = max(response.suggested_minutes, state["estimated_time"])
+    suggested_cost = max(response.suggested_cost, state["estimated_cost"])
     
-    # Simple parsing (look for keywords in response)
-    lines = response_text.split("\n")
-    for line in lines:
-        line_upper = line.upper()
-        if "RECOMMENDATION:" in line_upper:
-            if "INCREASE" in line_upper:
-                recommendation = "increase"
-            else:
-                recommendation = "keep"
-        elif "SUGGESTED_TIME:" in line_upper or "SUGGESTED TIME:" in line_upper:
-            # Extract number
-            import re
-            numbers = re.findall(r'\d+', line)
-            if numbers:
-                suggested_minutes = max(int(numbers[0]), state["estimated_time"])
-        elif "CONFIDENCE:" in line_upper:
-            if "HIGH" in line_upper:
-                confidence = "high"
-            elif "LOW" in line_upper:
-                confidence = "low"
-            else:
-                confidence = "medium"
-        elif "REASONING:" in line_upper:
-            # Get everything after REASONING:
-            reasoning_start = line_upper.find("REASONING:")
-            reasoning = line[reasoning_start + 10:].strip()
-            # Also include subsequent lines
-            idx = lines.index(line)
-            if idx + 1 < len(lines):
-                reasoning += " " + " ".join(lines[idx + 1:])
-    
-    print(f"LLM Recommendation: {recommendation} ({suggested_minutes} minutes)")
+    print(f"LLM Recommendation: {response.recommendation} ({suggested_minutes} minutes, ${suggested_cost})")
+    print(f"Confidence: {response.confidence}")
+    print(f"Reasoning: {response.reasoning[:100]}...")
     
     return {
-        "recommendation": recommendation,
+        "recommendation": response.recommendation,
         "suggested_minutes": suggested_minutes,
-        "reasoning": reasoning,
-        "confidence": confidence,
-        "messages": [response]
+        "suggested_cost": suggested_cost,
+        "reasoning": response.reasoning,
+        "confidence": response.confidence,
+        "messages": [HumanMessage(content=user_message)]
     }
 
 
@@ -278,12 +281,14 @@ if __name__ == "__main__":
     import json
     # Example usage
     initial_state = {
+        "id": "1234567890",
         "task_title": "Implement authentication system",
         "task_description": "Build JWT-based authentication with refresh tokens and role-based access control",
         "tag_name": "work",
         "tag_description": "Work related tasks",
         "email": "test@example.com",
         "estimated_time": 120,  # 2 hours
+        "estimated_cost": 100,  # 100 USD
         "similar_tags": [],
         "historical_tasks": [],
         "messages": []
@@ -304,6 +309,7 @@ if __name__ == "__main__":
     print("="*60)
     print(f"Recommendation: {result.get('recommendation', 'N/A').upper()}")
     print(f"Suggested Time: {result.get('suggested_minutes', 'N/A')} minutes")
+    print(f"Suggested Cost: {result.get('suggested_cost', 'N/A')} USD")
     print(f"Confidence: {result.get('confidence', 'N/A').upper()}")
     print(f"\nReasoning:")
     print(result.get('reasoning', 'N/A'))

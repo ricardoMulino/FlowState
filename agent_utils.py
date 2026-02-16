@@ -18,7 +18,8 @@ async def run_agent_background(
     title: str, 
     description: Optional[str],
     tag_names: List[str],
-    initial_duration: int = 30
+    initial_duration: int = 30,
+    initial_cost: int = 0
 ):
     """
     Runs the time estimation agent in the background and sends updates via WebSocket.
@@ -54,22 +55,25 @@ async def run_agent_background(
             task_description=description or "",
             tag_name=tag_name,
             tag_description=tag_description,
-            initial_estimate_minutes=initial_duration
+            initial_estimate_minutes=initial_duration,
+            initial_estimate_cost=initial_cost
         )
 
         # Extract estimation results
         recommendation = result.get("recommendation", "keep")
         suggested_minutes = result.get("suggested_minutes", 30)
+        suggested_cost = result.get("suggested_cost", 0)
         reasoning = result.get("reasoning", "")
         confidence = result.get("confidence", "medium")
         
-        print(f"[DEBUG] Sending WebSocket result: task_client_id={task_client_id}, recommendation={recommendation}, duration={suggested_minutes}")
+        print(f"[DEBUG] Sending WebSocket result: task_client_id={task_client_id}, recommendation={recommendation}, duration={suggested_minutes}, cost={suggested_cost}")
 
         # Send estimation result via WebSocket
         await manager.send_personal_message({
             "type": "agent_result",
             "task_client_id": task_client_id,
             "duration": suggested_minutes,
+            "cost": suggested_cost,
             "recommendation": recommendation,
             "reasoning": reasoning,
             "confidence": confidence,
@@ -87,6 +91,7 @@ async def run_agent_background(
                 task_client_id,
                 ai_estimation_status="success",
                 ai_time_estimation=suggested_minutes,
+                ai_cost_estimation=suggested_cost,
                 ai_recommendation=recommendation,
                 ai_reasoning=reasoning,
                 ai_confidence=confidence
@@ -102,7 +107,7 @@ async def run_agent_background(
             "type": "agent_status",
             "status": "completed",
             "task_client_id": task_client_id,
-            "message": f"AI estimation complete: {recommendation.upper()} - {suggested_minutes} min"
+            "message": f"AI estimation complete: {recommendation.upper()} - {suggested_minutes} min / ${suggested_cost}"
         }, client_id)
 
     except Exception as e:

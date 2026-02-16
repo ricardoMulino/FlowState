@@ -55,13 +55,17 @@ class TaskCreate(BaseModel):
     tag_names: Optional[List[str]] = None
     start_time: Optional[str] = None
     duration: Optional[int] = 0
+    estimated_cost: Optional[int] = 0
     recurrence: Optional[str] = None
     is_completed: bool = False
     flowbot_suggest_duration: Optional[int] = None
+    flowbot_suggest_cost: Optional[int] = 0
     actual_duration: Optional[int] = None
+    actual_cost: Optional[int] = 0
     color: Optional[str] = None
     ai_estimation_status: Optional[str] = None
     ai_time_estimation: Optional[int] = None
+    ai_cost_estimation: Optional[int] = 0
     ai_recommendation: Optional[str] = None
     ai_reasoning: Optional[str] = None
     ai_confidence: Optional[str] = None
@@ -74,13 +78,17 @@ class TaskUpdate(BaseModel):
     tag_names: Optional[List[str]] = None
     start_time: Optional[str] = None
     duration: Optional[int] = None
+    estimated_cost: Optional[int] = None
     recurrence: Optional[str] = None
     is_completed: Optional[bool] = None
     flowbot_suggest_duration: Optional[int] = None
+    flowbot_suggest_cost: Optional[int] = None
     actual_duration: Optional[int] = None
+    actual_cost: Optional[int] = None
     color: Optional[str] = None
     ai_estimation_status: Optional[str] = None
     ai_time_estimation: Optional[int] = None
+    ai_cost_estimation: Optional[int] = None
     ai_recommendation: Optional[str] = None
     ai_reasoning: Optional[str] = None
     ai_confidence: Optional[str] = None
@@ -505,11 +513,17 @@ async def create_task(task: TaskCreate, background_tasks: BackgroundTasks):
         task.tag_names, 
         start_time_dt, 
         task.duration,
+        task.estimated_cost,
         task.recurrence,
         task.is_completed,
+        flowbot_suggest_duration=task.flowbot_suggest_duration,
+        flowbot_suggest_cost=task.flowbot_suggest_cost,
+        actual_duration=task.actual_duration,
+        actual_cost=task.actual_cost,
         color=task.color,
         ai_estimation_status=task.ai_estimation_status,
         ai_time_estimation=task.ai_time_estimation,
+        ai_cost_estimation=task.ai_cost_estimation,
         ai_recommendation=task.ai_recommendation,
         ai_reasoning=task.ai_reasoning,
         ai_confidence=task.ai_confidence
@@ -528,7 +542,8 @@ async def create_task(task: TaskCreate, background_tasks: BackgroundTasks):
             task.title, 
             task.description,
             task.tag_names or [],
-            task.duration or 30
+            task.duration or 30,
+            task.estimated_cost or 0
         )
     
     return {"message": "Task created successfully", "title": task.title}

@@ -1,0 +1,18 @@
+{
+  "id": "1234567890",
+  "task_title": "Implement authentication system",
+  "task_description": "Build JWT-based authentication with refresh tokens and role-based access control",
+  "tag_name": "work",
+  "tag_description": "Work related tasks",
+  "email": "test@example.com",
+  "estimated_time": 120,
+  "estimated_cost": 100,
+  "similar_tags": [],
+  "historical_tasks": [],
+  "recommendation": "increase",
+  "suggested_minutes": 480,
+  "suggested_cost": 400,
+  "reasoning": "The task 'Implement authentication system' involving 'JWT-based authentication with refresh tokens and role-based access control' is highly complex. Building a robust authentication system requires significant time for design, implementation of multiple components (token generation, validation, refresh token logic, role management), security considerations, error handling, and thorough testing. An initial estimate of 120 minutes (2 hours) is insufficient for such a critical and multi-faceted system. Even without historical data, the inherent complexity of JWT, refresh tokens, and role-based access control warrants a substantial increase in the time estimate to ensure a secure and functional implementation. A more realistic estimate would be closer to 8 hours (480 minutes) to account for all aspects of development and testing.",
+  "confidence": "medium",
+  "similar_tasks_count": 0
+}

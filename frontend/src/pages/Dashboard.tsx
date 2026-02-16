@@ -14,9 +14,11 @@ import { MonthView } from '../components/calendar/MonthView';
 import { YearView } from '../components/calendar/YearView';
 import { useAuth } from '../contexts/AuthContext';
 import { useCalendar } from '../contexts/CalendarContext';
+import { useWebSocket } from '../contexts/WebSocketContext';
 
 export const Dashboard = () => {
     const { email } = useAuth();
+    const { socketId } = useWebSocket();
 
     const {
         currentDate,
@@ -86,7 +88,7 @@ export const Dashboard = () => {
                 estimatedTime: template.duration,
                 recurrence: template.recurrence,
                 actualDuration: undefined
-            });
+            }, socketId);
         }
     });
 
@@ -213,7 +215,7 @@ export const Dashboard = () => {
                         estimatedTime: duration,
                         actualDuration,
                         recurrence: undefined // or default
-                    });
+                    }, socketId);
                     setIsCreateModalOpen(false);
                 }}
             />
