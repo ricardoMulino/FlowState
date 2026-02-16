@@ -2,9 +2,11 @@ import { useState, useCallback, useEffect } from 'react';
 import type { Task } from '../types/calendarTypes';
 import { addMinutes, isSameDay } from 'date-fns';
 import { taskAPI } from '../api/flowstate';
+import { useWebSocket } from '../contexts/WebSocketContext';
 
 export function useCalendarState(userEmail: string | null) {
     const [tasks, setTasks] = useState<Task[]>([]);
+    const { lastMessage } = useWebSocket();
 
     const fetchTasks = useCallback(async () => {
         if (!userEmail) return;
@@ -39,6 +41,44 @@ export function useCalendarState(userEmail: string | null) {
     useEffect(() => {
         fetchTasks();
     }, [fetchTasks]);
+
+    // Handle WebSocket messages for AI estimation updates
+    useEffect(() => {
+        if (!lastMessage) return;
+
+        if (lastMessage.type === 'agent_status' && lastMessage.status === 'loading') {
+            // Find task by taskClientId and set loading state
+            const taskClientId = lastMessage.task_client_id;
+            setTasks(prev => prev.map(t =>
+                t.taskClientId === taskClientId || t.id === taskClientId
+                    ? { ...t, aiEstimationStatus: 'loading' as const }
+                    : t
+            ));
+        } else if (lastMessage.type === 'agent_result') {
+            // Update task with AI estimation results
+            const taskClientId = lastMessage.task_client_id;
+            setTasks(prev => prev.map(t =>
+                t.taskClientId === taskClientId || t.id === taskClientId
+                    ? {
+                        ...t,
+                        aiEstimationStatus: 'success' as const,
+                        aiTimeEstimation: lastMessage.duration,
+                        aiRecommendation: lastMessage.recommendation,
+                        aiReasoning: lastMessage.reasoning,
+                        aiConfidence: lastMessage.confidence
+                    }
+                    : t
+            ));
+        } else if (lastMessage.type === 'agent_error') {
+            // Handle AI estimation error
+            const taskClientId = lastMessage.task_client_id;
+            setTasks(prev => prev.map(t =>
+                t.taskClientId === taskClientId || t.id === taskClientId
+                    ? { ...t, aiEstimationStatus: 'error' as const }
+                    : t
+            ));
+        }
+    }, [lastMessage]);
 
     const addTask = useCallback(async (task: Task, socketId?: string) => {
         if (!userEmail) return;

@@ -14,6 +14,7 @@ import { MonthView } from '../components/calendar/MonthView';
 import { YearView } from '../components/calendar/YearView';
 import { useAuth } from '../contexts/AuthContext';
 import { useCalendar } from '../contexts/CalendarContext';
+import { useWebSocket } from '../contexts/WebSocketContext';
 
 export const Dashboard = () => {
     const { email } = useAuth();
@@ -27,6 +28,7 @@ export const Dashboard = () => {
         moveTask,
         deleteTask
     } = useCalendar();
+    const { socketId } = useWebSocket();
 
     const { tags } = useTags(email);
 
@@ -85,8 +87,9 @@ export const Dashboard = () => {
                 isCompleted: false,
                 estimatedTime: template.duration,
                 recurrence: template.recurrence,
-                actualDuration: undefined
-            });
+                actualDuration: undefined,
+                aiEstimationStatus: 'loading'
+            }, socketId);
         }
     });
 
@@ -212,8 +215,9 @@ export const Dashboard = () => {
                         isCompleted,
                         estimatedTime: duration,
                         actualDuration,
-                        recurrence: undefined // or default
-                    });
+                        recurrence: undefined,
+                        aiEstimationStatus: 'loading'
+                    }, socketId);
                     setIsCreateModalOpen(false);
                 }}
             />
