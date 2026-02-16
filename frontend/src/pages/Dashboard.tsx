@@ -18,6 +18,7 @@ import { useWebSocket } from '../contexts/WebSocketContext';
 
 export const Dashboard = () => {
     const { email } = useAuth();
+    const { socketId } = useWebSocket();
 
     const {
         currentDate,
@@ -215,8 +216,12 @@ export const Dashboard = () => {
                         isCompleted,
                         estimatedTime: duration,
                         actualDuration,
+<<<<<<< HEAD
                         recurrence: undefined,
                         aiEstimationStatus: 'loading'
+=======
+                        recurrence: undefined // or default
+>>>>>>> accidental
                     }, socketId);
                     setIsCreateModalOpen(false);
                 }}

@@ -14,8 +14,6 @@ from bson import ObjectId
 from dotenv import load_dotenv
 import os
 
-import agent
-
 # Load environment variables for embedding model
 load_dotenv()
 
@@ -305,13 +303,17 @@ def set_task(
     tag_names: Optional[List[str]] = None,
     start_time: Optional[Any] = None,
     duration: Optional[int] = 0,
+    estimated_cost: Optional[int] = 0,
     recurrence: Optional[str] = None,
     is_completed: bool = False,
     flowbot_suggest_duration: Optional[int] = None,
+    flowbot_suggest_cost: Optional[int] = 0,
     actual_duration: Optional[int] = None,
+    actual_cost: Optional[int] = 0,
     color: Optional[str] = None,
     ai_estimation_status: Optional[str] = None,
     ai_time_estimation: Optional[int] = None,
+    ai_cost_estimation: Optional[int] = 0,
     ai_recommendation: Optional[str] = None,
     ai_reasoning: Optional[str] = None,
     ai_confidence: Optional[str] = None
@@ -350,18 +352,26 @@ def set_task(
         update_data["start_time"] = start_time
     if duration is not None:
         update_data["duration"] = duration
+    if estimated_cost is not None:
+        update_data["estimated_cost"] = estimated_cost
     if recurrence is not None:
         update_data["recurrence"] = recurrence
     if flowbot_suggest_duration is not None:
         update_data["flowbot_suggest_duration"] = flowbot_suggest_duration
+    if flowbot_suggest_cost is not None:
+        update_data["flowbot_suggest_cost"] = flowbot_suggest_cost
     if actual_duration is not None:
         update_data["actual_duration"] = actual_duration
+    if actual_cost is not None:
+        update_data["actual_cost"] = actual_cost
     if color is not None:
         update_data["color"] = color
     if ai_estimation_status is not None:
         update_data["ai_estimation_status"] = ai_estimation_status
     if ai_time_estimation is not None:
         update_data["ai_time_estimation"] = ai_time_estimation
+    if ai_cost_estimation is not None:
+        update_data["ai_cost_estimation"] = ai_cost_estimation
     if ai_recommendation is not None:
         update_data["ai_recommendation"] = ai_recommendation
     if ai_reasoning is not None:
@@ -762,12 +772,14 @@ def update_task_ai_estimation(
     task_client_id: str,
     ai_estimation_status: str,
     ai_time_estimation: Optional[int] = None,
+    ai_cost_estimation: Optional[int] = None,
     ai_recommendation: Optional[str] = None,
     ai_reasoning: Optional[str] = None,
     ai_confidence: Optional[str] = None
 ) -> bool:
     """
     Updates a task's AI estimation fields using its task_client_id.
+    Includes both time and cost estimations.
     """
     db = client[DB_NAME]
     collection = db["tasks"]
@@ -778,6 +790,8 @@ def update_task_ai_estimation(
     
     if ai_time_estimation is not None:
         update_data["ai_time_estimation"] = ai_time_estimation
+    if ai_cost_estimation is not None:
+        update_data["ai_cost_estimation"] = ai_cost_estimation
     if ai_recommendation is not None:
         update_data["ai_recommendation"] = ai_recommendation
     if ai_reasoning is not None:

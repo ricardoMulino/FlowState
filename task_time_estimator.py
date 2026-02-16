@@ -16,7 +16,8 @@ def estimate_task_time(
     task_description: str,
     tag_name: str,
     tag_description: str,
-    initial_estimate_minutes: int
+    initial_estimate_minutes: int,
+    initial_estimate_cost: int = 0
 ) -> Dict[str, Any]:
     """
     Estimates appropriate time allocation for a task based on historical data.
@@ -28,27 +29,17 @@ def estimate_task_time(
         tag_name: Primary tag for the task
         tag_description: Description of the tag
         initial_estimate_minutes: User's initial time estimate in minutes
+        initial_estimate_cost: User's initial cost estimate in USD
         
     Returns:
         Dictionary containing:
         - recommendation: "increase" or "keep" (never "decrease")
         - suggested_minutes: Recommended time in minutes
+        - suggested_cost: Recommended cost in USD
         - reasoning: Explanation for the recommendation
         - confidence: "high", "medium", or "low"
         - similar_tags_found: Number of similar tags found
         - historical_tasks_analyzed: Number of historical tasks analyzed
-        
-    Example:
-        >>> result = estimate_task_time(
-        ...     email="user@example.com",
-        ...     task_title="Build API endpoint",
-        ...     task_description="Create REST API for user authentication",
-        ...     tag_name="backend",
-        ...     tag_description="Backend development tasks",
-        ...     initial_estimate_minutes=90
-        ... )
-        >>> print(f"Recommendation: {result['recommendation']}")
-        >>> print(f"Suggested time: {result['suggested_minutes']} minutes")
     """
     
     # Build the agent graph
@@ -63,6 +54,7 @@ def estimate_task_time(
         "tag_description": tag_description,
         "email": email,
         "estimated_time": initial_estimate_minutes,
+        "estimated_cost": initial_estimate_cost,
         "similar_tags": [],
         "historical_tasks": [],
         "messages": []
@@ -75,6 +67,7 @@ def estimate_task_time(
     return {
         "recommendation": result.get("recommendation", "keep"),
         "suggested_minutes": result.get("suggested_minutes", initial_estimate_minutes),
+        "suggested_cost": result.get("suggested_cost", initial_estimate_cost),
         "reasoning": result.get("reasoning", "No reasoning provided"),
         "confidence": result.get("confidence", "medium"),
         "similar_tags_found": len(result.get("similar_tags", [])),
