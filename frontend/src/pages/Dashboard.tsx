@@ -29,7 +29,6 @@ export const Dashboard = () => {
         moveTask,
         deleteTask
     } = useCalendar();
-    const { socketId } = useWebSocket();
 
     const { tags } = useTags(email);
 
@@ -216,12 +215,8 @@ export const Dashboard = () => {
                         isCompleted,
                         estimatedTime: duration,
                         actualDuration,
-<<<<<<< HEAD
                         recurrence: undefined,
                         aiEstimationStatus: 'loading'
-=======
-                        recurrence: undefined // or default
->>>>>>> accidental
                     }, socketId);
                     setIsCreateModalOpen(false);
                 }}
