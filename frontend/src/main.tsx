@@ -12,7 +12,7 @@ import { CalendarProvider } from './contexts/CalendarContext.tsx'
 import { ProtectedRoute } from './components/ProtectedRoute.tsx'
 import { WebSocketProvider } from './contexts/WebSocketContext.tsx'
 
-import { Dashboard } from './pages/Dashboard.tsx'
+import { Calendar } from './pages/Calendar.tsx'
 import { Tags } from './pages/Tags.tsx'
 import Dash from './dash.tsx'
 import Settings from './settingMenu.tsx'
@@ -43,7 +43,7 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Dashboard />,
+        element: <Calendar />,
       },
     ],
   },

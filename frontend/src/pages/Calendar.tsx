@@ -16,7 +16,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCalendar } from '../contexts/CalendarContext';
 import { useWebSocket } from '../contexts/WebSocketContext';
 
-export const Dashboard = () => {
+export const Calendar = () => {
     const { email } = useAuth();
     const { socketId } = useWebSocket();
 
