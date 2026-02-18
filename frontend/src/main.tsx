@@ -14,7 +14,7 @@ import { WebSocketProvider } from './contexts/WebSocketContext.tsx'
 
 import { Dashboard } from './pages/Dashboard.tsx'
 import { Tags } from './pages/Tags.tsx'
-import Dash from './dash.tsx'
+import Dash from './components/layout/dash.tsx'
 import Settings from './settingMenu.tsx'
 import { Flow } from './pages/Flow.tsx'
 

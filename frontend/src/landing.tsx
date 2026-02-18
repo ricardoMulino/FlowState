@@ -8,36 +8,35 @@ function Landing() {
     }
 
     return (
-        <div className="flex h-screen bg-slate-950 text-white overflow-hidden items-center justify-center relative">
-            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl pointer-events-none animate-pulse delay-700"></div>
+        <div >
+            <div></div>
+            <div></div>
+            <div></div>
 
-            <div className="glass-panel p-12 rounded-3xl max-w-lg w-full text-center relative z-10 mx-4 shadow-2xl border border-white/10">
-                <h1 className="text-6xl font-black mb-4 tracking-tight">
-                    <span className="text-gradient">FlowState</span>
+            <div>
+                <h1>
+                    <span>FlowState</span>
                 </h1>
-                <p className="text-slate-400 mb-8 text-lg font-light leading-relaxed">
+                <p>
                     Think, Plan, Execute
                 </p>
 
                 <button
                     onClick={LogSign}
-                    className="group relative w-full px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl font-bold text-white shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02] transition-all duration-300 overflow-hidden"
                 >
-                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                    <span className="relative flex items-center justify-center gap-2">
+                    <div></div>
+                    <span>
                         Get Started
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 transition-transform"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
                     </span>
                 </button>
 
-                <div className="mt-8 flex justify-center gap-6 text-sm text-slate-500">
+                <div>
 
                 </div>
             </div>
 
-            <footer className="absolute bottom-6 text-slate-600 text-xs text-center w-full">
+            <footer>
                 © {new Date().getFullYear()} FlowState. All rights reserved.
             </footer>
         </div>
