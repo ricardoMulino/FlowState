@@ -661,7 +661,8 @@ async def agent_chat(request: AgentChatRequest, background_tasks: BackgroundTask
 
     try:
         graph = build_search_agent_graph()
-        result = graph.invoke({
+        # Run synchronous graph in a thread to avoid blocking the event loop
+        result = await asyncio.to_thread(graph.invoke, {
             "messages": [HumanMessage(content=request.message)]
         })
         

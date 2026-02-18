@@ -48,7 +48,9 @@ async def run_agent_background(
             mongo_client.close()
 
         # Run the time estimation agent
-        result = estimate_task_time(
+        # Run the time estimation agent in a separate thread to avoid blocking the event loop
+        result = await asyncio.to_thread(
+            estimate_task_time,
             id=task_client_id,
             email=email,
             task_title=title,
