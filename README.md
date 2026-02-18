@@ -8,4 +8,4 @@
 
 <p>FlowState is a product of the 9th Annual Hacklahoma Hackathon and is still being improved upon for deployment.</p>
 
-<p>To operate, you will need to install .venv, activate it, pip install -r requirements.txt, and then run main.py. To activate frontend, cd frontend, npm install, and then npm run dev.</p>
+<p>To operate, you will need to install .venv ('python -m venv venv'), activate it.('./venv/Scripts/activate'), pip install -r requirements.txt, and then run main.py. To activate frontend, cd frontend, npm install, and then npm run dev.</p>
