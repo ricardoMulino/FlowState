@@ -247,12 +247,12 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                                             )}
                                             {(task.aiEstimationStatus === 'success' && (task.aiRecommendation === 'keep' || task.cost === task.aiCostEstimation)) && (
                                                 <span className="text-green-400 font-medium flex items-center gap-1" title={task.aiReasoning}>
-                                                    <CheckSquare className="w-4 h-4" /> Looks good ({task.cost}min)
+                                                    <CheckSquare className="w-4 h-4" /> Looks good ({task.cost}USD)
                                                 </span>
                                             )}
                                             {task.aiEstimationStatus === 'success' && task.aiRecommendation === 'increase' && task.cost !== task.aiCostEstimation && (
                                                 <span className="text-yellow-400 font-medium flex items-center gap-1" title={task.aiReasoning}>
-                                                    ⚠ Suggest {task.aiCostEstimation}Cost
+                                                    ⚠ Suggest Cost {task.aiCostEstimation}
                                                 </span>
                                             )}
                                             {task.aiEstimationStatus === 'error' && (

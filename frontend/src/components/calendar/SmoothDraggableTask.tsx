@@ -47,6 +47,10 @@ export const SmoothDraggableTask: React.FC<SmoothDraggableTaskProps> = ({ task, 
                 isDragging || isOverlay ? "opacity-90 shadow-2xl ring-2 ring-blue-500/50 scale-105 rotate-2" : "opacity-100 hover:bg-white/10 hover:border-white/20",
                 !isOverlay && "w-[90%] left-[5%]"
             )}
+            onClick={(e) => {
+                e.stopPropagation();
+                if (onEdit) onEdit(task);
+            }}
         >
             <div
                 className="absolute inset-0 opacity-20 pointer-events-none"
