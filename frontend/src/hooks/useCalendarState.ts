@@ -21,7 +21,7 @@ export function useCalendarState(userEmail: string | null) {
                 startTime: t.start_time ? new Date(t.start_time) : new Date(), // Fallback
                 endTime: t.end_time ? new Date(t.end_time) : addMinutes(new Date(), 30),
                 duration: t.duration || 30,
-                cost: t.cost || 0,
+                cost: t.estimated_cost || 0,
                 color: t.color || '#3b82f6',
                 isCompleted: t.is_completed || false,
                 estimatedTime: t.estimatedTime || 30,
@@ -127,6 +127,7 @@ export function useCalendarState(userEmail: string | null) {
             if (updates.aiRecommendation) backendUpdates.ai_recommendation = updates.aiRecommendation;
             if (updates.aiReasoning) backendUpdates.ai_reasoning = updates.aiReasoning;
             if (updates.aiConfidence) backendUpdates.ai_confidence = updates.aiConfidence;
+            if (updates.cost) backendUpdates.estimated_cost = updates.cost;
 
             await taskAPI.update(id, backendUpdates);
         } catch (e) {

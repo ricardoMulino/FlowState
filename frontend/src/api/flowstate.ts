@@ -249,7 +249,7 @@ export const taskAPI = {
                 socket_id: socketId, // Pass to backend
                 ai_estimation_status: aiEstimationStatus,
                 duration,
-                cost
+                estimated_cost: cost
             }),
         });
         if (!response.ok) throw new Error('Failed to create task');

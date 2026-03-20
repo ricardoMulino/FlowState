@@ -380,7 +380,7 @@ def set_task(
         update_data["ai_confidence"] = ai_confidence
     
     result = collection.update_one(
-        {"email": email, "title": title},
+        {"email": email, "task_client_id": task_client_id},
         {"$set": update_data},
         upsert=True
     )
