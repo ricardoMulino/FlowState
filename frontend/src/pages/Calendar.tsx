@@ -198,7 +198,7 @@ export const Calendar = () => {
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
                 categories={dynamicCategories}
-                onSave={(title, duration, startTime, category, description, isCompleted, actualDuration) => {
+                onSave={(title, duration, cost, startTime, category, description, isCompleted, actualDuration, actualCost) => {
                     const categoryColor = dynamicCategories.find(c => c.id === category)?.color || '#3b82f6';
                     const endTime = new Date(startTime);
                     endTime.setMinutes(endTime.getMinutes() + duration);
@@ -211,10 +211,13 @@ export const Calendar = () => {
                         startTime,
                         endTime,
                         duration,
+                        cost,
                         color: categoryColor,
                         isCompleted,
                         estimatedTime: duration,
+                        estimatedCost: cost,
                         actualDuration,
+                        actualCost,
                         recurrence: undefined,
                         aiEstimationStatus: 'loading'
                     }, socketId);

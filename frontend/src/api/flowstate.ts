@@ -33,11 +33,13 @@ export interface Task {
     start_time?: string;
     // end_time removed
     duration?: number;
+    cost?: number;
     is_completed?: boolean;
     recurrence?: string;
     color?: string;
     ai_estimation_status?: string;
     ai_time_estimation?: number;
+    ai_cost_estimation?: number;
     ai_recommendation?: string;
     ai_reasoning?: string;
     ai_confidence?: string;
@@ -228,7 +230,8 @@ export const taskAPI = {
         taskClientId?: string,
         socketId?: string,
         aiEstimationStatus?: string,
-        duration?: number
+        duration?: number,
+        cost?: number
     ): Promise<void> => {
         const response = await fetch(`${API_BASE}/tasks`, {
             method: 'POST',
@@ -245,7 +248,8 @@ export const taskAPI = {
                 color,
                 socket_id: socketId, // Pass to backend
                 ai_estimation_status: aiEstimationStatus,
-                duration
+                duration,
+                cost
             }),
         });
         if (!response.ok) throw new Error('Failed to create task');

@@ -21,13 +21,16 @@ export function useCalendarState(userEmail: string | null) {
                 startTime: t.start_time ? new Date(t.start_time) : new Date(), // Fallback
                 endTime: t.end_time ? new Date(t.end_time) : addMinutes(new Date(), 30),
                 duration: t.duration || 30,
+                cost: t.cost || 0,
                 color: t.color || '#3b82f6',
                 isCompleted: t.is_completed || false,
                 estimatedTime: t.estimatedTime || 30,
+                estimatedCost: t.estimatedCost || 0,
                 recurrence: t.recurrence,
                 tagNames: t.tag_names || [],
                 aiEstimationStatus: t.ai_estimation_status,
                 aiTimeEstimation: t.ai_time_estimation,
+                aiCostEstimation: t.ai_cost_estimation,
                 aiRecommendation: t.ai_recommendation,
                 aiReasoning: t.ai_reasoning,
                 aiConfidence: t.ai_confidence
@@ -63,6 +66,7 @@ export function useCalendarState(userEmail: string | null) {
                         ...t,
                         aiEstimationStatus: 'success' as const,
                         aiTimeEstimation: lastMessage.duration,
+                        aiCostEstimation: lastMessage.cost,
                         aiRecommendation: lastMessage.recommendation,
                         aiReasoning: lastMessage.reasoning,
                         aiConfidence: lastMessage.confidence
@@ -97,7 +101,8 @@ export function useCalendarState(userEmail: string | null) {
                 task.id, // Pass task_client_id
                 socketId, // Pass socket_id
                 task.aiEstimationStatus,
-                task.duration
+                task.duration,
+                task.cost
             );
             // Refresh to get ID (though WebSocket might beat it)
             fetchTasks();
@@ -118,6 +123,7 @@ export function useCalendarState(userEmail: string | null) {
             if (updates.color) backendUpdates.color = updates.color;
             if (updates.aiEstimationStatus) backendUpdates.ai_estimation_status = updates.aiEstimationStatus;
             if (updates.aiTimeEstimation) backendUpdates.ai_time_estimation = updates.aiTimeEstimation;
+            if (updates.aiCostEstimation) backendUpdates.ai_cost_estimation = updates.aiCostEstimation;
             if (updates.aiRecommendation) backendUpdates.ai_recommendation = updates.aiRecommendation;
             if (updates.aiReasoning) backendUpdates.ai_reasoning = updates.aiReasoning;
             if (updates.aiConfidence) backendUpdates.ai_confidence = updates.aiConfidence;

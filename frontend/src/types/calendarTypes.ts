@@ -17,11 +17,15 @@ export interface Task {
     color: string;
     isCompleted: boolean;
     estimatedTime: number;
+    estimatedCost?: number;
+    cost?: number;
     actualDuration?: number;
+    actualCost?: number;
     recurrence?: string;
     tagNames?: string[];
     aiEstimationStatus?: 'loading' | 'success' | 'error';
     aiTimeEstimation?: number;
+    aiCostEstimation?: number;
     aiRecommendation?: 'increase' | 'keep';
     aiReasoning?: string;
     aiConfidence?: 'high' | 'medium' | 'low';

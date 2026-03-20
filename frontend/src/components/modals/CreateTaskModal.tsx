@@ -6,7 +6,7 @@ import { type Category } from '../../types/calendarTypes';
 interface CreateTaskModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (title: string, duration: number, startTime: Date, tag: string, description: string, isCompleted: boolean, actualDuration?: number) => void;
+    onSave: (title: string, duration: number, cost: number, startTime: Date, tag: string, description: string, isCompleted: boolean, actualDuration?: number, actualCost?: number) => void;
     categories: Category[];
 }
 
@@ -14,7 +14,9 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ isOpen, onClos
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [duration, setDuration] = useState(60);
+    const [cost, setCost] = useState(0);
     const [actualDuration, setActualDuration] = useState<number | ''>('');
+    const [actualCost, setActualCost] = useState<number | ''>('');
     const [isCompleted, setIsCompleted] = useState(false);
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [time, setTime] = useState('09:00');
@@ -27,8 +29,9 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ isOpen, onClos
         const startTime = new Date(`${date}T${time}`);
         // Only pass actualDuration if it's a number and task is completed
         const finalActualDuration = isCompleted && typeof actualDuration === 'number' ? actualDuration : undefined;
+        const finalActualCost = isCompleted && typeof actualCost == 'number' ? actualCost : undefined;
 
-        onSave(title, duration, startTime, tag, description, isCompleted, finalActualDuration);
+        onSave(title, duration, cost, startTime, tag, description, isCompleted, finalActualDuration, finalActualCost);
         onClose();
 
         // Reset form slightly after close for smooth animation
@@ -36,7 +39,9 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ isOpen, onClos
             setTitle('');
             setDescription('');
             setDuration(60);
+            setCost(0);
             setActualDuration('');
+            setActualCost('');
             setIsCompleted(false);
             setTag('work');
         }, 300);
@@ -150,6 +155,19 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ isOpen, onClos
                                         />
                                     </div>
 
+                                    {/* Estimated Cost Input */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-400 mb-2">Est. Cost (Dollars)</label>
+                                        <input
+                                            type="number"
+                                            value={cost}
+                                            onChange={(e) => setCost(Number(e.target.value))}
+                                            min={0}
+                                            step={1}
+                                            className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                        />
+                                    </div>
+
                                     {/* Tag Input */}
                                     <div>
                                         <label className="block text-sm font-medium text-slate-400 mb-2 flex items-center gap-2">
@@ -196,6 +214,25 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ isOpen, onClos
                                             onChange={(e) => setActualDuration(e.target.value === '' ? '' : Number(e.target.value))}
                                             min={0}
                                             step={5}
+                                            disabled={!isCompleted}
+                                            placeholder={!isCompleted ? "Complete task first" : "e.g. 45"}
+                                            className={`w-full bg-slate-950/50 border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50
+                                                ${!isCompleted ? 'border-white/5 text-slate-600 cursor-not-allowed placeholder:text-slate-700' : 'border-white/10'}
+                                            `}
+                                        />
+                                    </div>
+
+                                    {/* Actual Cost Input */}
+                                    <div>
+                                        <label className={`block text-sm font-medium mb-2 ${isCompleted ? 'text-slate-400' : 'text-slate-600'}`}>
+                                            Actual Cost (Dollars)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={actualCost}
+                                            onChange={(e) => setActualCost(e.target.value === '' ? '' : Number(e.target.value))}
+                                            min={0}
+                                            step={1}
                                             disabled={!isCompleted}
                                             placeholder={!isCompleted ? "Complete task first" : "e.g. 45"}
                                             className={`w-full bg-slate-950/50 border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50

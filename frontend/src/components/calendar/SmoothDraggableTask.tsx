@@ -76,23 +76,25 @@ export const SmoothDraggableTask: React.FC<SmoothDraggableTaskProps> = ({ task, 
                                 <span className="text-blue-100 text-[9px] font-bold">AI</span>
                             </div>
                         )}
-                        {(task.aiEstimationStatus === 'success' && (task.aiRecommendation === 'keep' || task.duration === task.aiTimeEstimation)) && (
+                        {(task.aiEstimationStatus === 'success' && (task.aiRecommendation === 'keep' || (task.duration === task.aiTimeEstimation && task.cost === task.aiCostEstimation))) && (
                             <div
                                 className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-600 shadow-[0_0_12px_rgba(22,163,74,0.7)] border border-green-400 scale-110"
-                                title={task.aiReasoning || 'AI suggests keeping the estimated time'}
+                                title={task.aiReasoning || 'AI suggests keeping the estimated time and cost'}
                             >
                                 <span className="text-white font-black text-xs">✓</span>
                                 <span className="text-green-100 text-[9px] font-bold">{task.duration}m</span>
                             </div>
                         )}
-                        {task.aiEstimationStatus === 'success' && task.aiRecommendation === 'increase' && task.duration !== task.aiTimeEstimation && (
+                        {task.aiEstimationStatus === 'success' && task.aiRecommendation === 'increase' && (task.duration !== task.aiTimeEstimation || task.cost !== task.aiCostEstimation) && (
                             <div
                                 className="flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.8)] border border-yellow-200 scale-125 ring-2 ring-yellow-400/50"
-                                title={task.aiReasoning || `AI suggests ${task.aiTimeEstimation}min`}
+                                title={task.aiReasoning || `AI suggests ${task.aiTimeEstimation}min, $${task.aiCostEstimation}`}
                             >
                                 <span className="text-black font-black text-xs">⚠</span>
-                                <span className="text-yellow-900 text-[9px] font-bold">{task.aiTimeEstimation}m</span>
-                                {onUpdate && task.aiTimeEstimation && (
+                                <span className="text-yellow-900 text-[9px] font-bold">
+                                    {task.duration !== task.aiTimeEstimation ? `${task.aiTimeEstimation}m` : `$${task.aiCostEstimation}`}
+                                </span>
+                                {onUpdate && task.aiTimeEstimation && task.duration !== task.aiTimeEstimation && (
                                     <button
                                         className="ml-1 p-0.5 bg-yellow-600/20 hover:bg-yellow-600/40 rounded-full border border-yellow-600/30 transition-colors"
                                         onClick={(e) => {
@@ -101,7 +103,7 @@ export const SmoothDraggableTask: React.FC<SmoothDraggableTaskProps> = ({ task, 
                                                 onUpdate(task.id, { duration: task.aiTimeEstimation });
                                             }
                                         }}
-                                        title="Apply AI Suggestion"
+                                        title="Apply AI Time Suggestion"
                                     >
                                         <div className="w-2 h-2 rounded-full bg-black/50" />
                                     </button>
