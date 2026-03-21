@@ -400,8 +400,13 @@ def update_task_fields(client: MongoClient, task_id: str, updates: Dict[str, Any
     if "_id" in updates:
         del updates["_id"]
 
+    try:
+        query = {"_id": ObjectId(task_id)}
+    except Exception:
+        query = {"task_client_id": task_id}
+
     result = collection.update_one(
-        {"_id": ObjectId(task_id)},
+        query,
         {"$set": updates}
     )
     return result.acknowledged

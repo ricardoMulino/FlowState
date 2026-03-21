@@ -105,11 +105,11 @@ export function useCalendarState(userEmail: string | null) {
                 task.cost
             );
             // Refresh to get ID (though WebSocket might beat it)
-            fetchTasks();
+            //fetchTasks();
         } catch (e) {
             console.error("Failed to add task", e);
         }
-    }, [fetchTasks, userEmail]);
+    }, [userEmail]);//fetchTasks, 
 
     const updateTask = useCallback(async (id: string, updates: Partial<Task>) => {
         setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...updates } : t)));
