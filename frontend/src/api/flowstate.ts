@@ -357,6 +357,33 @@ export const agentAPI = {
 };
 
 // ============================================================================
+// PAD API
+// ============================================================================
+
+export interface Pad {
+    email: string;
+    pad_id: string;
+    information: string;
+}
+
+export const padAPI = {
+    get: async (email: string, padId: string): Promise<Pad> => {
+        const response = await fetch(`${API_BASE}/pads/${encodeURIComponent(email)}/${encodeURIComponent(padId)}`);
+        if (!response.ok) throw new Error('Failed to fetch pad');
+        return response.json();
+    },
+
+    set: async (email: string, padId: string, information: string): Promise<void> => {
+        const response = await fetch(`${API_BASE}/pads`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, pad_id: padId, information }),
+        });
+        if (!response.ok) throw new Error('Failed to save pad');
+    }
+};
+
+// ============================================================================
 // HEALTH CHECK
 // ============================================================================
 

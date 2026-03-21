@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
-// import { useAuth } from './contexts/AuthContext';
 import { useCalendar } from './contexts/CalendarContext';
 import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSameMonth, startOfWeek, endOfWeek } from 'date-fns';
+import { useFlowpad } from './hooks/useFlowpad';
 import { cn } from './lib/utils';
 import { AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 
 export default function Dash() {
-    // const { email } = useAuth(); // Not needed if tasks come from context (which has auth)
     const { currentDate, tasks, timeZone, setTimeZone } = useCalendar();
     const [now, setNow] = useState(new Date());
+    const { content, updateContent, isLoading } = useFlowpad();
 
     useEffect(() => {
         const timer = setInterval(() => setNow(new Date()), 1000);
@@ -71,8 +71,13 @@ export default function Dash() {
                         {/* Bottom Right: FloPad */}
                         <div className="glass-panel rounded-3xl p-5 relative group hover:border-emerald-500/30 transition-colors flex flex-col">
                             <div className="absolute inset-0 bg-gradient-to-bl from-emerald-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl" />
-                            <h3 className="text-sm font-medium text-slate-400 mb-2 z-10">FloPad</h3>
+                            <h3 className="text-sm font-medium text-slate-400 mb-2 z-10 flex justify-between items-center">
+                                <span>FloPad</span>
+                                {isLoading && <span className="text-[10px] text-emerald-400 animate-pulse">Syncing...</span>}
+                            </h3>
                             <textarea
+                                value={content}
+                                onChange={(e) => updateContent(e.target.value)}
                                 className="flex-1 w-full bg-transparent resize-none border border-transparent focus:border-blue-500/30 focus:bg-white/5 focus:ring-1 focus:ring-blue-500/30 rounded-xl p-3 text-sm text-slate-300 placeholder:text-slate-600 leading-relaxed z-10 scrollbar-hide transition-all duration-300"
                                 placeholder="Daily goals, quotes, or thoughts..."
                                 spellCheck={false}

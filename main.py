@@ -47,6 +47,12 @@ class TagDescriptionUpdate(BaseModel):
     tag_description: str
 
 
+class Pad(BaseModel):
+    email: str
+    pad_id: str
+    information: str
+
+
 class TaskCreate(BaseModel):
     email: str
     title: str
@@ -402,6 +408,35 @@ async def delete_tag(email: str, tag_name: str):
     if not result:
         raise HTTPException(status_code=404, detail="Tag not found")
     return {"message": "Tag deleted successfully"}
+
+
+# ============================================================================
+# PAD ENDPOINTS
+# ============================================================================
+
+@app.get("/api/pads/{email}/{pad_id}")
+async def get_pad(email: str, pad_id: str):
+    """Get a specific pad by email and pad_id"""
+    client = get_client()
+    pad = db.get_pad(client, email, pad_id)
+    if pad is None:
+        # Default empty pad if it doesn't exist yet
+        return {"email": email, "pad_id": pad_id, "information": ""}
+    
+    # ensure we don't return the raw ObjectId
+    if "_id" in pad:
+        pad["_id"] = str(pad["_id"])
+    return pad
+
+
+@app.post("/api/pads")
+async def set_pad(pad: Pad):
+    """Create or update a pad"""
+    client = get_client()
+    success = db.set_pad(client, pad.email, pad.pad_id, pad.information)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to save pad")
+    return {"message": "Pad saved successfully"}
 
 
 # ============================================================================

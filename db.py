@@ -766,6 +766,47 @@ if __name__ == "__main__":
         ["work"]
     )
     client.close()
+    
+# =============================================================================
+# PAD OPERATIONS
+# =============================================================================
+
+def set_pad(client: MongoClient, email: str, pad_id: str, information: str) -> bool:
+    """
+    Creates or updates a pad for a given user.
+    """
+    db = client[DB_NAME]
+    collection = db["pads"]
+    
+    result = collection.update_one(
+        {"email": email, "pad_id": pad_id},
+        {"$set": {"email": email, "pad_id": pad_id, "information": information}},
+        upsert=True
+    )
+    return result.acknowledged
+
+
+def get_pads(client: MongoClient, email: str) -> List[Dict[str, Any]]:
+    """Retrieves all pads for a specific user."""
+    db = client[DB_NAME]
+    collection = db["pads"]
+    return list(collection.find({"email": email}))
+
+
+def get_pad(client: MongoClient, email: str, pad_id: str) -> Optional[Dict[str, Any]]:
+    """Retrieves a specific pad by email and pad_id."""
+    db = client[DB_NAME]
+    collection = db["pads"]
+    return collection.find_one({"email": email, "pad_id": pad_id})
+
+
+def delete_pad(client: MongoClient, email: str, pad_id: str) -> bool:
+    """Deletes a specific pad. Returns True if a pad was deleted."""
+    db = client[DB_NAME]
+    collection = db["pads"]
+    result = collection.delete_one({"email": email, "pad_id": pad_id})
+    return result.deleted_count > 0
+
 
 def update_task_ai_estimation(
     client: MongoClient,
