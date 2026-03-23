@@ -26,14 +26,15 @@ export const SmoothDraggableTask: React.FC<SmoothDraggableTaskProps> = ({ task, 
         transform: CSS.Translate.toString(transform),
     };
 
-    const height = task.duration * (40 / 30);
+    // 1 px per minute matches the grid coordinate system (60px/hr)
+    const overlayHeight = task.duration;
 
     return (
         <div
             ref={setNodeRef}
             style={{
                 ...style,
-                height: `${height}px`,
+                height: isOverlay ? `${overlayHeight}px` : '100%',
                 // If overlay, we don't want absolute positioning relative to a parent slot
                 position: isOverlay ? 'relative' : 'absolute',
                 zIndex: isDragging || isOverlay ? 50 : 10,

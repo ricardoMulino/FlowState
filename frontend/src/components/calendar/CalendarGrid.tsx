@@ -125,7 +125,17 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                                             <DayCell
                                                 day={day}
                                                 category="work"
-                                                tasks={tasks.filter(t => isSameDay(t.startTime, day))}
+                                                tasks={tasks.filter(t => {
+                                                    const dayStart = new Date(day);
+                                                    dayStart.setHours(0, 0, 0, 0);
+                                                    const dayEnd = new Date(day);
+                                                    dayEnd.setHours(23, 59, 59, 999);
+                                                    // Use endTime (always valid after useCalendarState fix)
+                                                    const taskEnd = t.endTime instanceof Date && !isNaN(t.endTime.getTime())
+                                                        ? t.endTime
+                                                        : new Date(t.startTime.getTime() + t.duration * 60000);
+                                                    return t.startTime <= dayEnd && taskEnd > dayStart;
+                                                })}
                                                 onEdit={setEditingTask}
                                                 onUpdate={onTaskUpdate}
                                             />

@@ -1,6 +1,10 @@
+<h1>Flowbot Todo List/ Feature Add List</h1>
+
 Flowbot has no memory of past conversations. 
 
 Tasks that persist after midnight expand past clock hour, rather than looping back to the start of the next day.
+<b>-Halfway added, they now can go multiday, but some show incorrect date.
+And moving them is broken.</b>
 
 Calendar view starts at 12am, but should start at 6 or another more reasonable time, so users don't have to scroll past a bunch of empty hours to get to their first task.
 

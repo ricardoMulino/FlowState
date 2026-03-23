@@ -18,8 +18,11 @@ export function useCalendarState(userEmail: string | null) {
                 taskClientId: t.task_client_id, // Preserve for WebSocket matching
                 title: t.title,
                 description: t.description,
-                startTime: t.start_time ? new Date(t.start_time) : new Date(), // Fallback
-                endTime: t.end_time ? new Date(t.end_time) : addMinutes(new Date(), 30),
+                startTime: t.start_time ? new Date(t.start_time) : new Date(),
+                // Derive endTime from startTime + duration when backend doesn't store it
+                endTime: t.end_time
+                    ? new Date(t.end_time)
+                    : addMinutes(t.start_time ? new Date(t.start_time) : new Date(), t.duration || 30),
                 duration: t.duration || 30,
                 cost: t.estimated_cost || 0,
                 color: t.color || '#3b82f6',
