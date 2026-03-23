@@ -25,3 +25,15 @@ Importing .ics files
 
 Allow flowbot to handle files (Gemini already can so I assume we just need a way to send files to the api)
 
+Add scroll bar to week view. Only works with track pad rn
+
+Week view and day view jump by month when clicking top arrows
+
+Add user information to the settings tab. 
+-Options to change password
+-Options for working hours
+-Options for dashboard config maybe?
+
+Replace distribution with stocks (market trends my b) (for timmy)
+
+

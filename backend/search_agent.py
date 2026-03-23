@@ -113,7 +113,7 @@ def generate_response_node(state: SearchAgentState) -> Dict[str, Any]:
         
     context_str = "\n\n".join(context_parts)
     
-    system_prompt = """You are a helpful AI assistant with the ability to read web pages.
+    system_prompt = """You are a helpful AI assistant, named Flowbot, with the ability to read web pages.
     
     If the user provides URLs, you have been provided with the scraped content from those URLs below.
     Use this content to answer the user's questions. 

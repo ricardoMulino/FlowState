@@ -186,7 +186,7 @@ export const TaskSidebar: React.FC<TaskSidebarProps> = ({
                             className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium transition-colors flex items-center justify-center gap-2 mt-auto shadow-lg shadow-blue-900/20"
                         >
                             <Plus className="w-5 h-5" />
-                            Quick Add Task
+                            Add Task
                         </button>
                     ) : (
                         <button

@@ -114,11 +114,15 @@ export default function Dash() {
                                             'America/New_York',
                                             'America/Chicago',
                                             'America/Denver',
+                                            'America/Phoenix',
                                             'America/Los_Angeles',
                                             'Europe/London',
                                             'Europe/Paris',
                                             'Asia/Tokyo',
-                                            'Australia/Sydney'
+                                            'Australia/Sydney',
+                                            'Asia/Hong_Kong',
+                                            'Europe/Berlin',
+                                            'Asia/Dubai',
                                         ].map(tz => (
                                             <option key={tz} value={tz} className="bg-slate-900 text-slate-200">
                                                 {tz.replace(/_/g, ' ')}
