@@ -38,3 +38,4 @@ Replace distribution with stocks (market trends my b) (for timmy)
 
 Tasks can't overlap
 
+Sign In is Not Signing In (Not very fast at least)
