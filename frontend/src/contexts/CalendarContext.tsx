@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { useCalendarState } from '../hooks/useCalendarState';
 import type { Task } from '../types/calendarTypes';
@@ -21,7 +21,13 @@ const CalendarContext = createContext<CalendarContextType | undefined>(undefined
 export const CalendarProvider = ({ children }: { children: ReactNode }) => {
     const { email } = useAuth();
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [timeZone, setTimeZone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
+    const [timeZone, setTimeZone] = useState(() => {
+        return localStorage.getItem('flowstate_timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
+    });
+
+    useEffect(() => {
+        localStorage.setItem('flowstate_timezone', timeZone);
+    }, [timeZone]);
     const calendarState = useCalendarState(email);
 
     return (

@@ -62,22 +62,19 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                                 </div>
 
                                 {/* Time Labels Column */}
-                                <div className="relative bg-slate-900/30 pb-[60px]">
-                                    {Array.from({ length: 24 }, (_, i) => i).map((hour) => (
+                                <div className="relative bg-slate-950/20">
+                                    {/* Spacer for 12 AM - 1 AM */}
+                                    <div className="h-[60px]" />
+                                    {Array.from({ length: 23 }, (_, i) => i + 1).map((hour) => (
                                         <div
                                             key={hour}
-                                            className="h-[60px] text-xs text-slate-500 text-right pr-3 pt-1 font-medium transform -translate-y-2"
+                                            className="h-[60px] relative text-sm text-slate-400 font-semibold"
                                         >
-                                            {hour === 0 ? '12 AM' : hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
+                                            <span className="absolute right-3 top-0 -translate-y-1/2 bg-slate-950/20 px-1 rounded">
+                                                {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
+                                            </span>
                                         </div>
                                     ))}
-                                    {/* 12 AM Bottom Label */}
-                                    <div
-                                        className="absolute left-0 right-0 h-auto text-xs text-slate-500 text-right pr-3 pt-1 font-medium"
-                                        style={{ top: '1440px' }}
-                                    >
-                                        12 AM
-                                    </div>
                                 </div>
                             </div>
 
@@ -120,7 +117,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
                                 {/* Calendar Body (Tasks) */}
                                 <div className={cn(
-                                    "flex flex-1 relative min-h-[1440px] pb-[60px]", // pb-[60px] to match sidebar spacing
+                                    "flex flex-1 relative min-h-[1440px]",
                                 )}>
                                     {bodyDays.map((day) => (
                                         <div
@@ -152,6 +149,9 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                                 </div>
                             </div>
                         </div>
+
+                        {/* Extra scroll space at the bottom allowing vertical column lines to terminate perfectly at 1440px */}
+                        <div className="h-[60px] w-full shrink-0" />
                     </div>
                 </div>
             </div>

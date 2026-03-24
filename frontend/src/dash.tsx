@@ -3,10 +3,10 @@ import { useCalendar } from './contexts/CalendarContext';
 import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSameMonth, startOfWeek, endOfWeek } from 'date-fns';
 import { useFlowpad } from './hooks/useFlowpad';
 import { cn } from './lib/utils';
-import { AlertCircle, CheckCircle2, Clock } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Clock, TrendingUp, TrendingDown } from 'lucide-react';
 
 export default function Dash() {
-    const { currentDate, tasks, timeZone, setTimeZone } = useCalendar();
+    const { tasks, timeZone } = useCalendar();
     const [now, setNow] = useState(new Date());
     const { content, updateContent, isLoading } = useFlowpad();
 
@@ -16,7 +16,7 @@ export default function Dash() {
     }, []);
 
     // Filter tasks for today
-    const todaysTasks = tasks.filter(task => isSameDay(task.startTime, currentDate))
+    const todaysTasks = tasks.filter(task => isSameDay(task.startTime, now))
         .sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
 
     return (
@@ -30,46 +30,31 @@ export default function Dash() {
                 <div className="col-span-12 lg:col-span-5 flex flex-col gap-6 min-h-0">
 
                     {/* Top Left: Mini Monthly Calendar */}
-                    <div className="flex-[1.5] glass-panel rounded-3xl p-6 overflow-hidden flex flex-col relative group hover:border-blue-500/30 transition-colors">
+                    <div className="flex-[1.5] glass-panel rounded-3xl p-6 overflow-hidden flex flex-col relative group hover:border-blue-500/30 transition-colors min-h-0">
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                         <h2 className="text-lg font-semibold text-slate-200 mb-4 z-10 flex items-center justify-between">
-                            <span>{format(currentDate, 'MMMM yyyy')}</span>
+                            <span>{format(now, 'MMMM yyyy')}</span>
                             <span className="text-xs font-normal text-slate-500 bg-white/5 px-2 py-1 rounded-full">Mini View</span>
                         </h2>
-                        <div className="flex-1 z-10">
-                            <MiniCalendar currentDate={currentDate} tasks={tasks} />
+                        <div className="flex-1 z-10 min-h-0 w-full">
+                            <MiniCalendar currentDate={now} tasks={tasks} />
                         </div>
                     </div>
 
                     {/* Bottom Row Helper */}
                     <div className="flex-1 grid grid-cols-2 gap-6 min-h-0">
 
-                        {/* Bottom Left: Task Bubbles */}
-                        <div className="glass-panel rounded-3xl p-5 relative group hover:border-purple-500/30 transition-colors flex flex-col">
-                            <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl" />
-                            <h3 className="text-sm font-medium text-slate-400 mb-3 z-10">Task Distribution</h3>
-                            <div className="flex-1 overflow-auto scrollbar-hide flex flex-wrap content-start gap-2 z-10">
-                                {todaysTasks.length > 0 ? (
-                                    todaysTasks.map(task => (
-                                        <div
-                                            key={task.id}
-                                            className="w-10 h-10 rounded-full border border-white/10 shadow-lg hover:scale-110 transition-transform cursor-help flex items-center justify-center text-xs font-bold text-white/90 select-none"
-                                            style={{ backgroundColor: task.color, textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
-                                            title={`${task.title} (${task.duration}m)`}
-                                        >
-                                            {task.title.charAt(0).toUpperCase()}
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-xs text-slate-600 italic">
-                                        No tasks today
-                                    </div>
-                                )}
+                        {/* Bottom Left: Market Trends */}
+                        <div className="glass-panel rounded-3xl p-5 relative group hover:border-indigo-500/30 transition-colors flex flex-col min-h-0">
+                            <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl" />
+                            <h3 className="text-sm font-medium text-slate-400 mb-0 z-10">Market Trends</h3>
+                            <div className="flex-1 overflow-auto scrollbar-hide flex flex-col z-10 mt-2">
+                                <MarketTrends />
                             </div>
                         </div>
 
                         {/* Bottom Right: FloPad */}
-                        <div className="glass-panel rounded-3xl p-5 relative group hover:border-emerald-500/30 transition-colors flex flex-col">
+                        <div className="glass-panel rounded-3xl p-5 relative group hover:border-emerald-500/30 transition-colors flex flex-col min-h-0">
                             <div className="absolute inset-0 bg-gradient-to-bl from-emerald-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl" />
                             <h3 className="text-sm font-medium text-slate-400 mb-2 z-10 flex justify-between items-center">
                                 <span>FloPad</span>
@@ -93,42 +78,17 @@ export default function Dash() {
                     <div className="flex items-center justify-between mb-8 z-10">
                         <div>
                             <h2 className="text-2xl font-bold text-white mb-1">Daily Itinerary</h2>
-                            <p className="text-slate-400 text-sm">{format(currentDate, 'EEEE, MMMM do')}</p>
+                            <p className="text-slate-400 text-sm">{format(now, 'EEEE, MMMM do')}</p>
                         </div>
                         <div className="flex items-center gap-4">
                             <div className="text-right">
                                 <div className="text-2xl font-bold text-white font-mono tracking-wider tabular-nums">
-                                    {now.toLocaleTimeString('en-US', { timeZone, hour: 'numeric', minute: '2-digit', second: '2-digit' })}
+                                    {now.toLocaleTimeString(undefined, { timeZone, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
                                 </div>
                                 <div className="flex items-center justify-end gap-2">
                                     <div className="text-xs text-emerald-400 font-medium tracking-wide">LIVE</div>
                                     <span className="text-white/30">•</span>
-                                    <select
-                                        value={timeZone}
-                                        onChange={(e) => setTimeZone(e.target.value)}
-                                        className="bg-transparent text-xs text-slate-400 border-none outline-none focus:ring-0 cursor-pointer hover:text-white transition-colors text-right appearance-none"
-                                        title="Change Timezone"
-                                    >
-                                        {[
-                                            'UTC',
-                                            'America/New_York',
-                                            'America/Chicago',
-                                            'America/Denver',
-                                            'America/Phoenix',
-                                            'America/Los_Angeles',
-                                            'Europe/London',
-                                            'Europe/Paris',
-                                            'Asia/Tokyo',
-                                            'Australia/Sydney',
-                                            'Asia/Hong_Kong',
-                                            'Europe/Berlin',
-                                            'Asia/Dubai',
-                                        ].map(tz => (
-                                            <option key={tz} value={tz} className="bg-slate-900 text-slate-200">
-                                                {tz.replace(/_/g, ' ')}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    <div className="text-xs text-slate-400 font-medium tracking-wide">Local Time</div>
                                 </div>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
@@ -197,6 +157,56 @@ export default function Dash() {
     );
 }
 
+// Market Trends Component
+const MarketTrends = () => {
+    const [trends, setTrends] = useState([
+        { symbol: 'SPY', name: 'S&P 500', price: 508.92, change: 1.25, percent: 0.25 },
+        { symbol: 'QQQ', name: 'Nasdaq 100', price: 438.21, change: 2.15, percent: 0.49 },
+        { symbol: 'VOO', name: 'Vanguard 500', price: 468.10, change: 1.12, percent: 0.24 },
+        { symbol: 'DIA', name: 'Dow Jones', price: 391.31, change: -0.45, percent: -0.11 },
+    ]);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setTrends(prev => prev.map(t => {
+                const fluctuation = (Math.random() - 0.5) * 0.15;
+                const newPrice = t.price + fluctuation;
+                const newChange = t.change + fluctuation;
+                const newPercent = (newChange / (newPrice - newChange)) * 100;
+                return { ...t, price: newPrice, change: newChange, percent: newPercent };
+            }));
+        }, 5000);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <div className="flex flex-col gap-2 w-full pr-1 pb-1">
+            {trends.map(t => {
+                const isPositive = t.change >= 0;
+                return (
+                    <div key={t.symbol} className="flex items-center justify-between p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors cursor-default group/ticker">
+                        <div className="flex items-center gap-3">
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isPositive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                                {isPositive ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-sm font-bold text-slate-200 leading-none">{t.symbol}</span>
+                                <span className="text-[10px] text-slate-500 truncate w-16 leading-tight mt-0.5">{t.name}</span>
+                            </div>
+                        </div>
+                        <div className="flex flex-col items-end">
+                            <span className="text-sm font-mono text-slate-200 leading-none">${t.price.toFixed(2)}</span>
+                            <span className={`text-[10px] font-mono font-medium mt-0.5 leading-tight ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                {isPositive ? '+' : ''}{t.change.toFixed(2)} ({isPositive ? '+' : ''}{t.percent.toFixed(2)}%)
+                            </span>
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
+
 // Mini Calendar Component
 const MiniCalendar = ({ currentDate, tasks }: { currentDate: Date, tasks: any[] }) => {
     const monthStart = startOfMonth(currentDate);
@@ -208,13 +218,13 @@ const MiniCalendar = ({ currentDate, tasks }: { currentDate: Date, tasks: any[] 
     const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
     return (
-        <div className="flex flex-col h-full">
-            <div className="grid grid-cols-7 mb-2">
+        <div className="flex flex-col w-full h-full">
+            <div className="grid grid-cols-7 mb-2 shrink-0">
                 {weekDays.map(d => (
                     <div key={d} className="text-center text-[10px] font-bold text-slate-600">{d}</div>
                 ))}
             </div>
-            <div className="grid grid-cols-7 gap-1 flex-1 content-start">
+            <div className="grid grid-cols-7 gap-1 flex-1 auto-rows-fr min-h-0 pb-1">
                 {days.map(day => {
                     const isCurrentMonth = isSameMonth(day, monthStart);
                     const dayTasks = tasks.filter(t => isSameDay(t.startTime, day));
@@ -224,7 +234,7 @@ const MiniCalendar = ({ currentDate, tasks }: { currentDate: Date, tasks: any[] 
                         <div
                             key={day.toISOString()}
                             className={cn(
-                                "aspect-square rounded-lg flex flex-col items-center justify-center relative transition-all",
+                                "rounded-lg flex flex-col items-center justify-center relative transition-all min-h-0 py-0.5",
                                 !isCurrentMonth && "opacity-20",
                                 isTodayDate ? "bg-blue-500/20 text-blue-400 font-bold border border-blue-500/30" : "hover:bg-white/5 text-slate-400"
                             )}

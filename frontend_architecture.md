@@ -8,20 +8,20 @@ This document provides a high-level overview of the frontend codebase, explainin
 - **Role**: The application entry point.
 - **Function**: Mounts the React application to the DOM.
 - **Key Logic**: Configures the `React Router` with routes defined here. It wraps the app in strict mode and providers.
-- **Integration**: Imports `App`, `Dashboard`, and `login` to define the route hierarchy.
+- **Integration**: Imports `App`, `Calendar`, and `login` to define the route hierarchy.
 
 ### `src/App.tsx`
 - **Role**: The main layout wrapper.
 - **Function**: Defines the persistent application shell.
-- **Key Logic**: Renders the `Sidebar`, `Header`, and an `Outlet` for child routes (like Dashboard).
+- **Key Logic**: Renders the `Sidebar`, `Header`, and an `Outlet` for child routes (like Calendar).
 - **Integration**:
     - Imports `Sidebar` (navigation).
     - Imports `Header` (top bar controls).
-    - Uses `Outlet` to render `pages/Dashboard.tsx`.
+    - Uses `Outlet` to render `pages/Calendar.tsx`.
 
 ## 2. Page Views
 
-### `src/pages/Dashboard.tsx`
+### `src/pages/Calendar.tsx`
 - **Role**: The core functional page for task management.
 - **Function**: Orchestrates the interaction between the sidebar (source) and the calendar (target).
 - **Key Logic**:
@@ -42,7 +42,7 @@ This document provides a high-level overview of the frontend codebase, explainin
 
 ### `src/components/layout/Sidebar.tsx`
 - **Role**: Application navigation (leftmost strip).
-- **Function**: Static navigation links (Dashboard, Calendar, Settings).
+- **Function**: Static navigation links (Calendar, Tags, Settings).
 - **Integration**: Part of `App.tsx` layout.
 
 ### `src/components/layout/Header.tsx`
@@ -57,7 +57,7 @@ This document provides a high-level overview of the frontend codebase, explainin
     - Items here are `Draggable` (via `useDraggable` in sub-components).
     - "Quick Add" button triggers the modal.
 - **Integration**:
-    - Receives `onOpenCreateModal` from Dashboard.
+    - Receives `onOpenCreateModal` from Calendar.
     - Uses `SidebarTemplateItem` (draggable) internally.
 
 ### `src/components/calendar/CalendarGrid.tsx`
@@ -76,14 +76,14 @@ This document provides a high-level overview of the frontend codebase, explainin
 ### `src/components/modals/CreateTaskModal.tsx`
 - **Role**: Form for creating new tasks.
 - **Function**: Captures Title, Duration, Category, Date/Time.
-- **Integration**: Controlled by `Dashboard.tsx` state.
+- **Integration**: Controlled by `Calendar.tsx` state.
 
 ## 4. Logic & Utilities
 
 ### `src/hooks/useDragAndDrop.ts`
 - **Role**: Encapsulated DnD logic.
 - **Function**: Handles `onDragEnd` events, calculating new times based on drop position pixels.
-- **Integration**: Used by `Dashboard.tsx`.
+- **Integration**: Used by `Calendar.tsx`.
 
 ### `src/types/calendar.ts`
 - **Role**: Single source of truth for TypeScript definitions.
@@ -115,7 +115,7 @@ This document provides a high-level overview of the frontend codebase, explainin
                                            |
                                            v
                                 +--------------------------+
-                                |    pages/Dashboard.tsx   |
+                                |    pages/Calendar.tsx   |
                                 |   (State & DnD Context)  |
                                 +-------------+------------+
                                               |
@@ -150,10 +150,10 @@ This document provides a high-level overview of the frontend codebase, explainin
 ## Key data flows
 
 1.  **Task Creation (Modal)**:
-    `Dashboard` -> `CreateTaskModal` (User Input) -> `Dashboard` (`setTasks`) -> Updates `CalendarGrid` & `TaskSidebar`.
+    `Calendar` -> `CreateTaskModal` (User Input) -> `Calendar` (`setTasks`) -> Updates `CalendarGrid` & `TaskSidebar`.
 
 2.  **Task Dragging (Sidebar -> Calendar)**:
-    `TaskSidebar` (Draggable Template) --drag--> `CalendarGrid/SnapGrid` (Droppable Slot) --drop--> `Dashboard` (via `useDragAndDrop` logic) -> New Task Created.
+    `TaskSidebar` (Draggable Template) --drag--> `CalendarGrid/SnapGrid` (Droppable Slot) --drop--> `Calendar` (via `useDragAndDrop` logic) -> New Task Created.
 
 3.  **Task Moving (Calendar -> Calendar)**:
-    `CalendarGrid` (Draggable Task) --drag--> `CalendarGrid/SnapGrid` (Droppable Slot) --drop--> `Dashboard` (via `useDragAndDrop` logic) -> Task Updated.
+    `CalendarGrid` (Draggable Task) --drag--> `CalendarGrid/SnapGrid` (Droppable Slot) --drop--> `Calendar` (via `useDragAndDrop` logic) -> Task Updated.
