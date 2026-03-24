@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { DayCell } from './DayCell';
 import { type Task } from '../../types/calendarTypes';
 import { cn } from '../../lib/utils';
@@ -38,11 +38,19 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
     // Body Days (Depends on View Mode)
     const bodyDays = viewMode === 'week' ? weekDays : [currentDate];
 
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = 6 * 60;
+        }
+    }, []);
+
     return (
         <>
             <div className="flex flex-col h-full bg-slate-950 text-slate-100 overflow-hidden">
                 {/* Main Scroll Container */}
-                <div className="flex-1 overflow-auto relative scroll-smooth">
+                <div ref={scrollContainerRef} className="flex-1 overflow-auto relative scroll-smooth">
                     <div className="flex min-w-max flex-col">
                         {/* Wrapper for the entire grid content to ensure min-width applies */}
                         <div className="flex">

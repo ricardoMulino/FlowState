@@ -6,7 +6,7 @@ Tasks that persist after midnight expand past clock hour, rather than looping ba
 <b>-Halfway added, they now can go multiday, but some show incorrect date.
 And moving them is broken.</b>
 
-Calendar view starts at 12am, but should start at 6 or another more reasonable time, so users don't have to scroll past a bunch of empty hours to get to their first task.
+<s>Calendar view starts at 12am, but should start at 6 or another more reasonable time, so users don't have to scroll past a bunch of empty hours to get to their first task.</s>
 
 Multi-day tasks should display during working hours only, not the entire day. (Perhaps the user sets the working hours?)
 
@@ -27,7 +27,7 @@ Allow flowbot to handle files (Gemini already can so I assume we just need a way
 
 Add scroll bar to week view. Only works with track pad rn
 
-Week view and day view jump by month when clicking top arrows
+<s>Week view and day view jump by month when clicking top arrows</s>
 
 Add user information to the settings tab. 
 -Options to change password
@@ -36,4 +36,5 @@ Add user information to the settings tab.
 
 Replace distribution with stocks (market trends my b) (for timmy)
 
+Tasks can't overlap
 

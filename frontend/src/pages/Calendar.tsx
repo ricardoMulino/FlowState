@@ -57,7 +57,15 @@ export const Calendar = () => {
     // Navigation handlers
     const navigateMonth = (direction: 'prev' | 'next') => {
         const newDate = new Date(currentDate);
-        newDate.setMonth(newDate.getMonth() + (direction === 'next' ? 1 : -1));
+        if (viewMode === 'day') {
+            newDate.setDate(newDate.getDate() + (direction === 'next' ? 1 : -1));
+        } else if (viewMode === 'week') {
+            newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7));
+        } else if (viewMode === 'month') {
+            newDate.setMonth(newDate.getMonth() + (direction === 'next' ? 1 : -1));
+        } else {
+            newDate.setFullYear(newDate.getFullYear() + (direction === 'next' ? 1 : -1));
+        }
         setCurrentDate(newDate);
     };
 
