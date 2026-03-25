@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { cn } from '../lib/utils';
 import { CalendarGrid } from '../components/calendar/CalendarGrid';
 import { TaskSidebar } from '../components/sidebar/TaskSidebar';
 import { CreateTaskModal } from '../components/modals/CreateTaskModal';
@@ -47,6 +48,7 @@ export const Calendar = () => {
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isDragExpanded, setIsDragExpanded] = useState(false);
+    const [isFullscreen, setIsFullscreen] = useState(false);
     const [filterCategory, setFilterCategory] = useState<string | 'all'>('all');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
@@ -134,7 +136,10 @@ export const Calendar = () => {
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
         >
-            <div className="flex-1 mt-4 flex gap-4 overflow-hidden h-full">
+            <div className={cn(
+                "flex-1 flex gap-4 overflow-hidden transition-all duration-300",
+                isFullscreen ? "fixed inset-0 z-[100] bg-slate-950 p-6 m-0" : "mt-4 h-full"
+            )}>
                 <TaskSidebar
                     recentTasks={recentTasks}
                     onOpenCreateModal={() => setIsCreateModalOpen(true)}
@@ -143,6 +148,8 @@ export const Calendar = () => {
                     filter={filterCategory}
                     onFilterChange={setFilterCategory}
                     categories={dynamicCategories}
+                    isFullscreen={isFullscreen}
+                    onToggleFullscreen={() => setIsFullscreen(prev => !prev)}
                 />
                 <main className="flex-1 overflow-hidden relative glass-panel rounded-2xl flex flex-col">
                     {/* Header Controls */}

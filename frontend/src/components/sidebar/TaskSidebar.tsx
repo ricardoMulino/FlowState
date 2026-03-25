@@ -3,7 +3,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { motion } from 'framer-motion';
 import { type Task, type Category } from '../../types/calendarTypes';
 import { TASK_TEMPLATES, type TaskTemplate } from '../../data/templates';
-import { Plus, GripVertical, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import { Plus, GripVertical, ChevronLeft, ChevronRight, Filter, Maximize, Minimize } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 interface TaskSidebarProps {
@@ -14,6 +14,8 @@ interface TaskSidebarProps {
     filter: string | 'all';
     onFilterChange: (filter: string | 'all') => void;
     categories: Category[];
+    isFullscreen?: boolean;
+    onToggleFullscreen?: () => void;
 }
 
 export const TaskSidebar: React.FC<TaskSidebarProps> = ({
@@ -23,27 +25,38 @@ export const TaskSidebar: React.FC<TaskSidebarProps> = ({
     onToggle,
     filter,
     onFilterChange,
-    categories
+    categories,
+    isFullscreen,
+    onToggleFullscreen
 }) => {
     const [isFilterExpanded, setIsFilterExpanded] = React.useState(false);
 
     return (
         <motion.aside
+            initial={false}
             animate={{ width: isOpen ? 320 : 70 }}
             className={cn(
                 "relative h-full transition-all duration-300 z-40",
                 !isOpen && "items-center"
             )}
         >
-            {/* Toggle Button - Square with Arrow */}
-            <button
-                onClick={onToggle}
-                className={cn(
-                    "absolute top-6 -right-4 w-8 h-8 bg-slate-800 border border-white/10 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-colors z-[60] cursor-pointer shadow-lg"
-                )}
-            >
-                {isOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-            </button>
+            {/* Toggle Buttons Container */}
+            <div className="absolute top-6 -right-4 flex flex-col gap-2 z-[60]">
+                <button
+                    onClick={onToggle}
+                    className="w-8 h-8 bg-slate-800 border border-white/10 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-colors cursor-pointer shadow-lg"
+                    title={isOpen ? "Collapse Sidebar" : "Expand Sidebar"}
+                >
+                    {isOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                </button>
+                <button
+                    onClick={onToggleFullscreen}
+                    className="w-8 h-8 bg-slate-800 border border-white/10 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-colors cursor-pointer shadow-lg"
+                    title={isFullscreen ? "Exit Fullscreen" : "Fullscreen Calendar"}
+                >
+                    {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+                </button>
+            </div>
 
             {/* Main Sidebar Container with Glass effect */}
             <div className={cn(
