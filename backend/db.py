@@ -891,7 +891,7 @@ def update_task_ai_estimation(
 # PROJECT OPERATIONS
 # =============================================================================
 
-def set_project(client: MongoClient, email: str, project_id: str, title: str, tasks: List[Dict[str, Any]]) -> bool:
+def set_project(client: MongoClient, email: str, project_id: str, title: str, tasks: List[Dict[str, Any]], starting_date: Optional[str] = None, cost: Optional[str] = None, description: Optional[str] = None) -> bool:
     """
     Creates or updates a project grid environment.
     """
@@ -902,7 +902,10 @@ def set_project(client: MongoClient, email: str, project_id: str, title: str, ta
         "email": email,
         "project_id": project_id,
         "title": title,
-        "tasks": tasks
+        "tasks": tasks,
+        "starting_date": starting_date,
+        "cost": cost,
+        "description": description
     }
     
     result = collection.update_one(

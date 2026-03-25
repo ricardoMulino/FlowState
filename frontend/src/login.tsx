@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { signInUser, signUpUser } from './auth.ts'
+import { useSettingsContext } from './contexts/SettingsContext'
 
 export default function AuthPage() {
     const navigate = useNavigate()
+    const { isDarkMode } = useSettingsContext()
     const [isLoginView, setIsLoginView] = useState(true) // Toggle between Login/Signup
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
@@ -41,7 +43,9 @@ export default function AuthPage() {
     }
 
     return (
-        <div className="flex h-screen bg-slate-950 text-white overflow-hidden items-center justify-center relative">
+        <div className={`flex h-screen overflow-hidden items-center justify-center relative transition-colors duration-300 ${
+            isDarkMode ? 'dark bg-background text-foreground' : 'bg-background text-foreground'
+        }`}>
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
 

@@ -1,14 +1,18 @@
 import { useNavigate } from "react-router-dom";
+import { useSettingsContext } from "./contexts/SettingsContext";
 
 function Landing() {
     const navigate = useNavigate();
+    const { isDarkMode } = useSettingsContext();
 
     const LogSign = () => {
         navigate('/login');
     }
 
     return (
-        <div className="flex h-screen bg-slate-950 text-white overflow-hidden items-center justify-center relative">
+        <div className={`flex h-screen overflow-hidden items-center justify-center relative transition-colors duration-300 ${
+            isDarkMode ? 'dark bg-background text-foreground' : 'bg-background text-foreground'
+        }`}>
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl pointer-events-none animate-pulse delay-700"></div>
@@ -44,4 +48,4 @@ function Landing() {
     );
 }
 
-export default Landing;
+export default Landing;

@@ -32,6 +32,14 @@ const RootNode = ({ data }: { data: any }) => {
     const [date, setDate] = useState(data.date || '');
     const [scope, setScope] = useState(data.scope || '');
 
+    // Sync state with props when data changes
+    useEffect(() => {
+        setTitle(data.label && data.label !== 'Project Scope' ? data.label : '');
+        setBudget(data.budget || '');
+        setDate(data.date || '');
+        setScope(data.scope || '');
+    }, [data.label, data.budget, data.date, data.scope]);
+
     // Propagate changes to parent via data callbacks
     const fireChange = (patch: Record<string, string>) => {
         Object.assign(data, patch);
@@ -421,12 +429,21 @@ const ProjectBoard: React.FC<{ project?: any, onClose: () => void }> = ({ projec
     // Load saved project on mount
     useEffect(() => {
         if (project && project.tasks) {
-            const newNodes = project.tasks.map((t: any) => ({
-                id: t.task_client_id,
-                type: t.data?.type || 'custom',
-                position: { x: t.x || 0, y: t.y || 0 },
-                data: { ...t.data, onInputChange: t.data?.type === 'root' ? handleRootInputChange : undefined }
-            }));
+            const newNodes = project.tasks.map((t: any) => {
+                const isRoot = t.data?.type === 'root' || t.type === 'root';
+                return {
+                    id: t.task_client_id,
+                    type: t.type || t.data?.type || 'custom',
+                    position: { x: t.x || 0, y: t.y || 0 },
+                    data: { 
+                        ...t.data, 
+                        date: isRoot ? (project.starting_date || t.data?.date) : t.data?.date,
+                        budget: isRoot ? (project.cost || t.data?.budget) : t.data?.budget,
+                        scope: isRoot ? (project.description || t.data?.scope) : t.data?.scope,
+                        onInputChange: isRoot ? handleRootInputChange : undefined 
+                    }
+                };
+            });
             
             const newEdges: Edge[] = [];
             project.tasks.forEach((t: any) => {
@@ -542,6 +559,9 @@ const ProjectBoard: React.FC<{ project?: any, onClose: () => void }> = ({ projec
 
         const rootNode = nodes.find(n => n.type === 'root') || nodes[0];
         const projectTitle = rootNode?.data?.label || 'New Project';
+        const starting_date = (rootNode?.data as any)?.date || '';
+        const cost = (rootNode?.data as any)?.budget || '';
+        const description = (rootNode?.data as any)?.scope || '';
         const project_id = project?.project_id || Date.now().toString();
 
         const projectTasks = nodes.map(node => {
@@ -554,7 +574,8 @@ const ProjectBoard: React.FC<{ project?: any, onClose: () => void }> = ({ projec
                 x: node.position.x,
                 y: node.position.y,
                 connected_tasks: connected_tasks,
-                data: { ...node.data, type: node.type }
+                type: node.type,
+                data: node.data
             };
         });
 
@@ -562,6 +583,9 @@ const ProjectBoard: React.FC<{ project?: any, onClose: () => void }> = ({ projec
             email,
             project_id,
             title: projectTitle,
+            starting_date,
+            cost,
+            description,
             tasks: projectTasks
         };
 
@@ -770,6 +794,21 @@ export const Vantage: React.FC = () => {
                             </div>
                             <h3 className="text-xl font-bold text-slate-200 mb-2 truncate w-full">{p.title || 'Untitled Project'}</h3>
                             <p className="text-sm text-slate-400">{p.tasks?.length || 0} nodes defined</p>
+                            
+                            <div className="flex gap-4 mt-auto pt-4 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                {p.cost && (
+                                    <div className="flex items-center gap-1.5">
+                                        <DollarSign className="w-3 h-3 text-emerald-400" />
+                                        <span className="text-emerald-100/80">{p.cost}</span>
+                                    </div>
+                                )}
+                                {p.starting_date && (
+                                    <div className="flex items-center gap-1.5">
+                                        <Clock className="w-3 h-3 text-blue-400" />
+                                        <span className="text-blue-100/80">{p.starting_date}</span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     ))}
                     

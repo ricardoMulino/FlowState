@@ -31,6 +31,8 @@ export function useCalendarState(userEmail: string | null) {
                 estimatedCost: t.estimatedCost || 0,
                 recurrence: t.recurrence,
                 tagNames: t.tag_names || [],
+                actualDuration: t.actual_duration,
+                actualCost: t.actual_cost,
                 aiEstimationStatus: t.ai_estimation_status,
                 aiTimeEstimation: t.ai_time_estimation,
                 aiCostEstimation: t.ai_cost_estimation,
@@ -105,7 +107,9 @@ export function useCalendarState(userEmail: string | null) {
                 socketId, // Pass socket_id
                 task.aiEstimationStatus,
                 task.duration,
-                task.cost
+                task.cost,
+                task.actualDuration,
+                task.actualCost
             );
             // Refresh to get ID (though WebSocket might beat it)
             //fetchTasks();
@@ -131,6 +135,8 @@ export function useCalendarState(userEmail: string | null) {
             if (updates.aiReasoning) backendUpdates.ai_reasoning = updates.aiReasoning;
             if (updates.aiConfidence) backendUpdates.ai_confidence = updates.aiConfidence;
             if (updates.cost) backendUpdates.estimated_cost = updates.cost;
+            if (updates.actualDuration !== undefined) backendUpdates.actual_duration = updates.actualDuration;
+            if (updates.actualCost !== undefined) backendUpdates.actual_cost = updates.actualCost;
 
             await taskAPI.update(id, backendUpdates);
         } catch (e) {
