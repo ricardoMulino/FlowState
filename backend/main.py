@@ -136,6 +136,7 @@ class ProjectNode(BaseModel):
     task_client_id: str
     x: float
     y: float
+    type: Optional[str] = None
     connected_tasks: List[str] = []
     data: Optional[Dict[str, Any]] = None
 
@@ -146,6 +147,9 @@ class ProjectCreate(BaseModel):
     project_id: str
     title: str
     tasks: List[ProjectNode] = []
+    starting_date: Optional[str] = None
+    cost: Optional[str] = None
+    description: Optional[str] = None
 
 
 class ProjectNodeGenRequest(BaseModel):
@@ -553,7 +557,16 @@ async def set_project(project: ProjectCreate):
     """Create or update a project"""
     client = get_client()
     tasks_dict = [t.dict() for t in project.tasks]
-    success = db.set_project(client, project.email, project.project_id, project.title, tasks_dict)
+    success = db.set_project(
+        client, 
+        project.email, 
+        project.project_id, 
+        project.title, 
+        tasks_dict,
+        starting_date=project.starting_date,
+        cost=project.cost,
+        description=project.description
+    )
     if not success:
         raise HTTPException(status_code=500, detail="Failed to save project")
     return {"message": "Project saved successfully"}

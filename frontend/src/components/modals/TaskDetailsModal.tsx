@@ -301,6 +301,25 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                                             `}
                                         />
                                     </div>
+
+                                    {/* Actual Cost Input */}
+                                    <div>
+                                        <label className={`block text-sm font-medium mb-1 ${isCompleted ? 'text-slate-400' : 'text-slate-600'}`}>
+                                            Actual Cost (Dollars)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={actualCost}
+                                            onChange={(e) => setActualCost(e.target.value === '' ? '' : Number(e.target.value))}
+                                            min={0}
+                                            step={1}
+                                            disabled={!isCompleted}
+                                            placeholder={!isCompleted ? "Complete task first" : "e.g. 45"}
+                                            className={`w-full bg-slate-950/50 border rounded-xl px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50
+                                                 ${!isCompleted ? 'border-white/5 text-slate-600 cursor-not-allowed placeholder:text-slate-700' : 'border-white/10'}
+                                            `}
+                                        />
+                                    </div>
                                 </div>
 
                                 {/* Recurrence & Tags */}
