@@ -183,87 +183,125 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                                     </div>
                                 </div>
 
-                                {/* Duration & AI Estimation */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {!task.isCompleted && (
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-400 mb-1">Est. Duration (min)</label>
-                                        <input
-                                            type="number"
-                                            value={duration}
-                                            onChange={(e) => setDuration(Number(e.target.value))}
-                                            min={5}
-                                            step={5}
-                                            className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-400 mb-1 flex items-center gap-2">
-                                            <Sparkles className="w-4 h-4" /> AI Estimation
-                                        </label>
-                                        <div className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-2 text-white">
-                                            {task.aiEstimationStatus === 'loading' && (
-                                                <span className="text-blue-400 animate-pulse">? Estimating...</span>
-                                            )}
-                                            {(task.aiEstimationStatus === 'success' && (task.aiRecommendation === 'keep' || task.duration === task.aiTimeEstimation)) && (
-                                                <span className="text-green-400 font-medium flex items-center gap-1" title={task.aiReasoning}>
-                                                    <CheckSquare className="w-4 h-4" /> Looks good ({task.duration}min)
-                                                </span>
-                                            )}
-                                            {task.aiEstimationStatus === 'success' && task.aiRecommendation === 'increase' && task.duration !== task.aiTimeEstimation && (
-                                                <span className="text-yellow-400 font-medium flex items-center gap-1" title={task.aiReasoning}>
-                                                    ⚠ Suggest {task.aiTimeEstimation}min
-                                                </span>
-                                            )}
-                                            {task.aiEstimationStatus === 'error' && (
-                                                <span className="text-red-400">❌ Error</span>
-                                            )}
-                                            {!task.aiEstimationStatus && (
-                                                <span className="text-slate-500">No AI estimation</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
+                                        {/* Duration & AI Estimation */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-slate-400 mb-1">Est. Duration (min)</label>
+                                                <input
+                                                    type="number"
+                                                    value={duration}
+                                                    onChange={(e) => setDuration(Number(e.target.value))}
+                                                    min={5}
+                                                    step={5}
+                                                    className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                                />
+                                            </div>
 
-                                {/* Cost & AI Estimation */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-400 mb-1">Est. Cost (Dollars)</label>
-                                        <input
-                                            type="number"
-                                            value={cost}
-                                            onChange={(e) => setCost(Number(e.target.value))}
-                                            min={0}
-                                            step={1}
-                                            className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-400 mb-1 flex items-center gap-2">
-                                            <Sparkles className="w-4 h-4" /> AI Cost Estimation
-                                        </label>
-                                        <div className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-2 text-white">
-                                            {task.aiEstimationStatus === 'loading' && (
-                                                <span className="text-blue-400 animate-pulse">? Estimating...</span>
-                                            )}
-                                            {(task.aiEstimationStatus === 'success' && (task.aiRecommendation === 'keep' || task.cost === task.aiCostEstimation)) && (
-                                                <span className="text-green-400 font-medium flex items-center gap-1" title={task.aiReasoning}>
-                                                    <CheckSquare className="w-4 h-4" /> Looks good ({task.cost}USD)
-                                                </span>
-                                            )}
-                                            {task.aiEstimationStatus === 'success' && task.aiRecommendation === 'increase' && task.cost !== task.aiCostEstimation && (
-                                                <span className="text-yellow-400 font-medium flex items-center gap-1" title={task.aiReasoning}>
-                                                    ⚠ Suggest Cost {task.aiCostEstimation}
-                                                </span>
-                                            )}
-                                            {task.aiEstimationStatus === 'error' && (
-                                                <span className="text-red-400">❌ Error</span>
-                                            )}
-                                            {!task.aiEstimationStatus && (
-                                                <span className="text-slate-500">No AI estimation</span>
-                                            )}
+                                            <div>
+                                                <label className="block text-sm font-medium text-slate-400 mb-1 flex items-center gap-2">
+                                                    <Sparkles className="w-4 h-4" /> AI Estimation
+                                                </label>
+                                                <div className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-2 text-white">
+                                                    {task.aiEstimationStatus === 'loading' && (
+                                                        <span className="text-blue-400 animate-pulse">? Estimating...</span>
+                                                    )}
+                                                    {(task.aiEstimationStatus === 'success' && (task.aiRecommendation === 'keep' || task.duration === task.aiTimeEstimation)) && (
+                                                        <span className="text-green-400 font-medium flex items-center gap-1" title={task.aiReasoning}>
+                                                            <CheckSquare className="w-4 h-4" /> Looks good ({task.duration}min)
+                                                        </span>
+                                                    )}
+                                                    {task.aiEstimationStatus === 'success' && task.aiRecommendation === 'increase' && task.duration !== task.aiTimeEstimation && (
+                                                        <span className="text-yellow-400 font-medium flex items-center gap-1" title={task.aiReasoning}>
+                                                            ⚠ Suggest {task.aiTimeEstimation}min
+                                                        </span>
+                                                    )}
+                                                    {task.aiEstimationStatus === 'error' && (
+                                                        <span className="text-red-400">❌ Error</span>
+                                                    )}
+                                                    {!task.aiEstimationStatus && (
+                                                        <span className="text-slate-500">No AI estimation</span>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+                                        {/* Cost & AI Estimation */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-slate-400 mb-1">Est. Cost (Dollars)</label>
+                                                <input
+                                                    type="number"
+                                                    value={cost}
+                                                    onChange={(e) => setCost(Number(e.target.value))}
+                                                    min={0}
+                                                    step={1}
+                                                    className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-slate-400 mb-1 flex items-center gap-2">
+                                                    <Sparkles className="w-4 h-4" /> AI Cost Estimation
+                                                </label>
+                                                <div className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-2 text-white">
+                                                    {task.aiEstimationStatus === 'loading' && (
+                                                        <span className="text-blue-400 animate-pulse">? Estimating...</span>
+                                                    )}
+                                                    {(task.aiEstimationStatus === 'success' && (task.aiRecommendation === 'keep' || task.cost === task.aiCostEstimation)) && (
+                                                        <span className="text-green-400 font-medium flex items-center gap-1" title={task.aiReasoning}>
+                                                            <CheckSquare className="w-4 h-4" /> Looks good ({task.cost}USD)
+                                                        </span>
+                                                    )}
+                                                    {task.aiEstimationStatus === 'success' && task.aiRecommendation === 'increase' && task.cost !== task.aiCostEstimation && (
+                                                        <span className="text-yellow-400 font-medium flex items-center gap-1" title={task.aiReasoning}>
+                                                            ⚠ Suggest Cost {task.aiCostEstimation}
+                                                        </span>
+                                                    )}
+                                                    {task.aiEstimationStatus === 'error' && (
+                                                        <span className="text-red-400">❌ Error</span>
+                                                    )}
+                                                    {!task.aiEstimationStatus && (
+                                                        <span className="text-slate-500">No AI estimation</span>
+                                                    )}
+                                                </div>
+                                            </div>
+
                                         </div>
                                     </div>
-                                </div>
+                                )}
+
+                                {task.isCompleted && (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {/* Duration & Cost Withou AI */}
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-400 mb-1">Est. Duration (min)</label>
+                                            <input
+                                                type="number"
+                                                value={duration}
+                                                onChange={(e) => setDuration(Number(e.target.value))}
+                                                min={5}
+                                                step={5}
+                                                className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-400 mb-1">Est. Cost (Dollars)</label>
+                                            <input
+                                                type="number"
+                                                value={cost}
+                                                onChange={(e) => setCost(Number(e.target.value))}
+                                                min={0}
+                                                step={1}
+                                                className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {/* Completed Checkbox */}
