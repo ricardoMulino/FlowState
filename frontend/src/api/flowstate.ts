@@ -253,6 +253,7 @@ export const taskAPI = {
                 socket_id: socketId, // Pass to backend
                 ai_estimation_status: aiEstimationStatus,
                 duration,
+                cost: cost,
                 estimated_cost: cost,
                 actual_duration: actualDuration,
                 actual_cost: actualCost

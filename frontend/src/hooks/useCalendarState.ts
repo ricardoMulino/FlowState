@@ -143,7 +143,10 @@ export function useCalendarState(userEmail: string | null) {
             if (updates.aiRecommendation) backendUpdates.ai_recommendation = updates.aiRecommendation;
             if (updates.aiReasoning) backendUpdates.ai_reasoning = updates.aiReasoning;
             if (updates.aiConfidence) backendUpdates.ai_confidence = updates.aiConfidence;
-            if (updates.cost) backendUpdates.estimated_cost = updates.cost;
+            if (updates.cost !== undefined) {
+                backendUpdates.cost = updates.cost;
+                backendUpdates.estimated_cost = updates.cost; // Support both for safety
+            }
             if (updates.actualDuration !== undefined) backendUpdates.actual_duration = updates.actualDuration;
             if (updates.actualCost !== undefined) backendUpdates.actual_cost = updates.actualCost;
 
