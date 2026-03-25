@@ -209,12 +209,12 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                                                     )}
                                                     {(task.aiEstimationStatus === 'success' && (task.aiRecommendation === 'keep' || task.duration === task.aiTimeEstimation)) && (
                                                         <span className="text-green-400 font-medium flex items-center gap-1" title={task.aiReasoning}>
-                                                            <CheckSquare className="w-4 h-4" /> Looks good ({task.duration}min)
+                                                            <CheckSquare className="w-4 h-4" /> Looks good {Math.floor(task.aiTimeEstimation / 60)}:{(task.aiTimeEstimation % 60 < 10 ? '0' + (task.aiTimeEstimation % 60) : (task.aiTimeEstimation % 60))}
                                                         </span>
                                                     )}
                                                     {task.aiEstimationStatus === 'success' && task.aiRecommendation === 'increase' && task.duration !== task.aiTimeEstimation && (
                                                         <span className="text-yellow-400 font-medium flex items-center gap-1" title={task.aiReasoning}>
-                                                            ⚠ Suggest {task.aiTimeEstimation}min
+                                                            ⚠ Suggest {Math.floor(task.aiTimeEstimation / 60)}:{(task.aiTimeEstimation % 60 < 10 ? '0' + (task.aiTimeEstimation % 60) : (task.aiTimeEstimation % 60))}
                                                         </span>
                                                     )}
                                                     {task.aiEstimationStatus === 'error' && (
@@ -303,24 +303,25 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                                     </div>
                                 )}
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {/* Completed Checkbox */}
-                                    <div className="flex items-center gap-3 bg-slate-950/30 p-3 rounded-xl border border-white/5 h-[74px] mt-1">
-                                        <div className="relative flex items-center">
-                                            <input
-                                                type="checkbox"
-                                                id="edit-task-completed"
-                                                checked={isCompleted}
-                                                onChange={(e) => setIsCompleted(e.target.checked)}
-                                                className="peer w-5 h-5 appearance-none rounded border border-slate-500 checked:bg-blue-500 checked:border-blue-500 transition-colors cursor-pointer"
-                                            />
-                                            <CheckSquare className="absolute inset-0 w-5 h-5 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" />
-                                        </div>
-                                        <label htmlFor="edit-task-completed" className="text-sm font-medium text-slate-300 cursor-pointer select-none">
-                                            Mark as Completed
-                                        </label>
-                                    </div>
 
+                                {/* Completed Checkbox */}
+                                <div className="flex items-center gap-3 bg-slate-950/30 p-3 rounded-xl border border-white/5 h-[74px] w-[40%] mt-1">
+                                    <div className="relative flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            id="edit-task-completed"
+                                            checked={isCompleted}
+                                            onChange={(e) => setIsCompleted(e.target.checked)}
+                                            className="peer w-5 h-5 appearance-none rounded border border-slate-500 checked:bg-blue-500 checked:border-blue-500 transition-colors cursor-pointer"
+                                        />
+                                        <CheckSquare className="absolute inset-0 w-5 h-5 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" />
+                                    </div>
+                                    <label htmlFor="edit-task-completed" className="text-sm font-medium text-slate-300 cursor-pointer select-none">
+                                        Mark as Completed
+                                    </label>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {/* Actual Duration Input */}
                                     <div>
                                         <label className={`block text-sm font-medium mb-1 ${isCompleted ? 'text-slate-400' : 'text-slate-600'}`}>
