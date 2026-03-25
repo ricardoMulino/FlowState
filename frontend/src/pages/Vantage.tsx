@@ -286,6 +286,8 @@ const initialNodes = [
     },
 ];
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+
 const ProjectBoard: React.FC<{ project?: any, onClose: () => void }> = ({ project, onClose }) => {
     const { email } = useAuth();
     const { screenToFlowPosition } = useReactFlow();
@@ -310,7 +312,7 @@ const ProjectBoard: React.FC<{ project?: any, onClose: () => void }> = ({ projec
         // Mark root node as generating
         setNodes(nds => nds.map(n => n.type === 'root' ? { ...n, data: { ...n.data, isGenerating: true, onInputChange: handleRootInputChange } } : n));
 
-        fetch('http://localhost:8000/api/projects/generate-nodes', {
+        fetch(`${API_BASE}/projects/generate-nodes`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title: debouncedRoot.title, scope: debouncedRoot.scope, budget: debouncedRoot.budget })
@@ -590,7 +592,7 @@ const ProjectBoard: React.FC<{ project?: any, onClose: () => void }> = ({ projec
         };
 
         try {
-            const res = await fetch(`http://localhost:8000/api/projects`, {
+            const res = await fetch(`${API_BASE}/projects`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -702,7 +704,7 @@ export const Vantage: React.FC = () => {
 
     useEffect(() => {
         if (!email) return;
-        fetch(`http://localhost:8000/api/projects/${email}`)
+        fetch(`${API_BASE}/projects/${email}`)
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data)) setProjects(data);
@@ -725,7 +727,7 @@ export const Vantage: React.FC = () => {
         if (!confirm(`Are you sure you want to delete "${proj.title}"?`)) return;
         
         try {
-            const res = await fetch(`http://localhost:8000/api/projects/${email}/${proj.project_id}`, {
+            const res = await fetch(`${API_BASE}/projects/${email}/${proj.project_id}`, {
                 method: 'DELETE'
             });
             if (res.ok) {
