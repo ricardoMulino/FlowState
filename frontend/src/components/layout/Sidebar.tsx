@@ -45,13 +45,13 @@ export const Sidebar: React.FC = () => {
             {/* Toggle Button */}
             <button
                 onClick={() => setIsCollapsed(!isCollapsed)}
-                className="absolute top-6 -right-3 w-6 h-6 bg-slate-800 border border-white/10 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-colors z-[60] cursor-pointer shadow-md"
+                className="absolute top-6 -right-3 w-6 h-6 bg-background border border-border rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors z-[60] cursor-pointer shadow-md"
             >
                 {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
             </button>
 
             <div className={cn(
-                "flex flex-col h-full gap-6 bg-slate-950 border-r border-white/5 transition-all duration-300 overflow-hidden",
+                "flex flex-col h-full gap-6 bg-card border-r border-border transition-all duration-300 overflow-hidden",
                 isCollapsed ? "items-center px-2" : "px-4"
             )}>
                 {/* Logo Area */}
@@ -96,7 +96,7 @@ export const Sidebar: React.FC = () => {
                                 <span className="font-medium whitespace-nowrap">{item.label}</span>
                             )}
                             {isCollapsed && (
-                                <div className="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50">
+                                <div className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 border border-border">
                                     {item.label}
                                 </div>
                             )}
@@ -105,7 +105,7 @@ export const Sidebar: React.FC = () => {
                 </nav>
 
                 {/* Bottom Section (Settings + Logout) */}
-                <div className="mt-auto pb-4 space-y-2 w-full border-t border-white/5 pt-4">
+                <div className="mt-auto pb-4 space-y-2 w-full border-t border-border pt-4">
                     {bottomNavItems.map((item) => (
                         <NavLink
                             key={item.path}

@@ -4,6 +4,41 @@
 
 @layer base {
   :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+
+    --radius: 0.75rem;
+
+    --glass-background: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(0, 0, 0, 0.05);
+  }
+
+  .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
@@ -31,6 +66,9 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
+    
+    --glass-background: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
   }
 }
 
@@ -48,15 +86,15 @@
 
 .glass-panel {
   backdrop-filter: blur(24px);
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: var(--glass-background);
+  border: 1px solid var(--glass-border);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
 .glass-panel-heavy {
   backdrop-filter: blur(40px);
-  background-color: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background-color: var(--glass-background);
+  border: 1px solid var(--glass-border);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
@@ -65,9 +103,9 @@
 }
 
 .glass-hover:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--glass-background);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--glass-border);
 }
 
 .text-gradient {
@@ -84,25 +122,21 @@
   padding: 0.75rem 1rem;
   border-radius: 0.75rem;
   transition: all 0.2s;
-  color: #94a3b8;
-  /* slate-400 */
+  color: var(--muted-foreground);
   border: 1px solid transparent;
 }
 
 .sidebar-link:hover {
-  color: white;
-  background-color: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.05);
+  color: var(--foreground);
+  background-color: var(--accent);
+  border-color: var(--border);
 }
 
 .sidebar-link.active {
-  background-color: rgba(37, 99, 235, 0.1);
-  /* blue-600/10 */
-  color: #60a5fa;
-  /* blue-400 */
-  border-color: rgba(59, 130, 246, 0.2);
-  /* blue-500/20 */
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+  background-color: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+  border-color: hsl(var(--primary) / 0.2);
+  box-shadow: 0 0 20px hsl(var(--primary) / 0.15);
 }
 
 /* Animations */
@@ -147,19 +181,19 @@
 }
 
 *:hover::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--muted);
 }
 
 *:hover::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--muted-foreground);
 }
 
 /* --- ReactFlow Glassmorphism Overrides --- */
 .react-flow__controls {
     @apply flex flex-col gap-1 rounded-xl overflow-hidden shadow-xl !important;
-    background-color: rgba(15, 23, 42, 0.8) !important;
+    background-color: hsl(var(--popover) / 0.8) !important;
     backdrop-filter: blur(12px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid hsl(var(--border)) !important;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3) !important;
 }
 
@@ -167,7 +201,7 @@
     @apply bg-transparent transition-colors flex items-center justify-center !important;
     width: 40px !important;
     height: 40px !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-bottom: 1px solid hsl(var(--border) / 0.5) !important;
 }
 
 .react-flow__controls-button:last-child {
@@ -179,7 +213,7 @@
 }
 
 .react-flow__controls-button svg {
-    fill: #94a3b8 !important; /* slate-400 */
+    fill: hsl(var(--muted-foreground)) !important;
     transition: fill 0.2s;
 }
 
@@ -189,11 +223,11 @@
 
 .react-flow__minimap {
     @apply rounded-xl overflow-hidden shadow-xl mb-6 mr-6 !important;
-    background-color: rgba(15, 23, 42, 0.8) !important;
+    background-color: hsl(var(--popover) / 0.8) !important;
     backdrop-filter: blur(12px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid hsl(var(--border)) !important;
 }
 
 .react-flow__minimap-mask {
-    fill: rgba(15, 23, 42, 0.7) !important;
+    fill: hsl(var(--background) / 0.7) !important;
 }

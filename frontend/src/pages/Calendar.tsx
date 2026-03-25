@@ -138,7 +138,7 @@ export const Calendar = () => {
         >
             <div className={cn(
                 "flex-1 flex gap-4 overflow-hidden transition-all duration-300",
-                isFullscreen ? "fixed inset-0 z-[100] bg-slate-950 p-6 m-0" : "mt-4 h-full"
+                isFullscreen ? "fixed inset-0 z-[100] bg-background p-6 m-0" : "mt-4 h-full"
             )}>
                 <TaskSidebar
                     recentTasks={recentTasks}

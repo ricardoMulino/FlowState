@@ -44,14 +44,14 @@ export const TaskSidebar: React.FC<TaskSidebarProps> = ({
             <div className="absolute top-6 -right-4 flex flex-col gap-2 z-[60]">
                 <button
                     onClick={onToggle}
-                    className="w-8 h-8 bg-slate-800 border border-white/10 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-colors cursor-pointer shadow-lg"
+                    className="w-8 h-8 bg-background border border-border rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer shadow-lg"
                     title={isOpen ? "Collapse Sidebar" : "Expand Sidebar"}
                 >
                     {isOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
                 </button>
                 <button
                     onClick={onToggleFullscreen}
-                    className="w-8 h-8 bg-slate-800 border border-white/10 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-colors cursor-pointer shadow-lg"
+                    className="w-8 h-8 bg-background border border-border rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer shadow-lg"
                     title={isFullscreen ? "Exit Fullscreen" : "Fullscreen Calendar"}
                 >
                     {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
@@ -60,7 +60,7 @@ export const TaskSidebar: React.FC<TaskSidebarProps> = ({
 
             {/* Main Sidebar Container with Glass effect */}
             <div className={cn(
-                "flex flex-col gap-6 p-4 glass-panel rounded-2xl h-full w-full overflow-hidden border border-white/10",
+                "flex flex-col gap-6 p-4 glass-panel rounded-2xl h-full w-full overflow-hidden border border-border",
                 !isOpen && "p-2 items-center"
             )}>
                 {/* Content Container */}
@@ -76,8 +76,8 @@ export const TaskSidebar: React.FC<TaskSidebarProps> = ({
                                     setIsFilterExpanded(!isFilterExpanded);
                                 }}
                                 className={cn(
-                                    "p-2 rounded-lg transition-colors flex items-center gap-2 text-slate-400 hover:text-white",
-                                    (isFilterExpanded && isOpen) ? "bg-white/10 text-white" : "hover:bg-white/5"
+                                    "p-2 rounded-lg transition-colors flex items-center gap-2 text-muted-foreground hover:text-foreground",
+                                    (isFilterExpanded && isOpen) ? "bg-accent text-foreground" : "hover:bg-accent"
                                 )}
                                 title={!isOpen ? "Expand to Filter" : "Toggle Filters"}
                             >
@@ -148,12 +148,12 @@ export const TaskSidebar: React.FC<TaskSidebarProps> = ({
 
                     {/* Recent Tasks */}
                     <div className="flex-1 overflow-hidden flex flex-col w-full">
-                        {isOpen && <h2 className="text-lg font-semibold text-slate-300 mb-4 px-1">Recent Tasks</h2>}
+                        {isOpen && <h2 className="text-lg font-semibold text-muted-foreground mb-4 px-1">Recent Tasks</h2>}
                         <div className={cn("flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-hide w-full", !isOpen && "flex flex-col items-center pt-4 gap-2")}>
                             {recentTasks.map((task) => (
                                 isOpen ? (
-                                    <div key={task.id} className="p-3 rounded-lg bg-white/5 border border-white/5 text-sm group hover:border-white/20 transition-colors">
-                                        <div className="font-medium text-slate-200">{task.title}</div>
+                                    <div key={task.id} className="p-3 rounded-lg bg-muted border border-border text-sm group hover:border-accent transition-colors">
+                                        <div className="font-medium text-foreground">{task.title}</div>
                                         <div className="flex justify-between mt-2 text-xs text-slate-500">
                                             <span style={{ color: task.color }}>{task.tagNames?.[0] || 'no tag'}</span>
                                             <div className="flex items-center gap-1">
@@ -176,7 +176,7 @@ export const TaskSidebar: React.FC<TaskSidebarProps> = ({
                                 ) : (
                                     <div
                                         key={task.id}
-                                        className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center hover:scale-110 transition-transform cursor-pointer relative group"
+                                        className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:scale-110 transition-transform cursor-pointer relative group"
                                         style={{ backgroundColor: `${task.color}20`, borderColor: task.color }}
                                         title={task.title}
                                     >
@@ -185,7 +185,7 @@ export const TaskSidebar: React.FC<TaskSidebarProps> = ({
                                 )
                             ))}
                             {recentTasks.length === 0 && (
-                                <div className="text-sm text-slate-600 text-center py-4">
+                                <div className="text-sm text-muted-foreground text-center py-4">
                                     {isOpen ? "No recent tasks" : "-"}
                                 </div>
                             )}
@@ -224,8 +224,8 @@ const FilterChip = ({ label, active, onClick, color }: { label: string, active: 
         className={cn(
             "px-2 py-1 rounded-md text-xs font-medium transition-all border",
             active
-                ? "bg-white/10 text-white border-white/20"
-                : "bg-transparent text-slate-500 border-transparent hover:bg-white/5 hover:text-slate-300"
+                ? "bg-accent text-foreground border-border"
+                : "bg-transparent text-muted-foreground border-transparent hover:bg-accent hover:text-foreground"
         )}
         style={active && color ? { borderColor: color, color: color, backgroundColor: `${color}20` } : {}}
     >
@@ -253,7 +253,7 @@ const DraggableTemplate = ({ template, showLabel = true }: { template: TaskTempl
                 style={style}
                 {...listeners}
                 {...attributes}
-                className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all cursor-grab active:cursor-grabbing group shadow-md flex items-center justify-center"
+                className="w-10 h-10 rounded-xl bg-muted border border-border hover:border-accent hover:bg-accent transition-all cursor-grab active:cursor-grabbing group shadow-md flex items-center justify-center"
                 title={template.title}
             >
                 <div
@@ -270,7 +270,7 @@ const DraggableTemplate = ({ template, showLabel = true }: { template: TaskTempl
             style={style}
             {...listeners}
             {...attributes}
-            className="p-3 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all cursor-grab active:cursor-grabbing group shadow-md"
+            className="p-3 rounded-xl bg-muted border border-border hover:border-accent hover:bg-accent transition-all cursor-grab active:cursor-grabbing group shadow-md"
         >
             <div className="flex items-center gap-3">
                 <div
@@ -278,10 +278,10 @@ const DraggableTemplate = ({ template, showLabel = true }: { template: TaskTempl
                     style={{ backgroundColor: template.color }}
                 />
                 <div className="flex-1">
-                    <h3 className="font-medium text-slate-200 group-hover:text-white transition-colors">
+                    <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">
                         {template.title}
                     </h3>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-muted-foreground">
                         {template.duration} min • {template.category}
                     </p>
                 </div>

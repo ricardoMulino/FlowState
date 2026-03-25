@@ -9,7 +9,7 @@ function App() {
 
   return (
     <div className={`flex h-screen overflow-hidden transition-colors duration-300 ${
-      isDarkMode ? 'bg-slate-950 text-white' : 'bg-slate-50 text-slate-900'
+      isDarkMode ? 'dark bg-background text-foreground' : 'bg-background text-foreground'
     }`}>
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
