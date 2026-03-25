@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Telescope, Save, Download, LogOut, Upload } from 'lucide-react';
+import { Plus, Telescope, Save, LogOut, Upload, Trash2, Clock, DollarSign, FileText, HardHat } from 'lucide-react';
 import ReactFlow, {
     Background,
     Controls,
@@ -14,11 +14,90 @@ import type { Connection, Edge } from 'reactflow';
 import 'reactflow/dist/style.css';
 
 const CustomNode = ({ data }: { data: any }) => {
+    // Default data structure if not provided
+    const nodeData = {
+        title: data.label || 'Pour Concrete Foundation',
+        status: data.status || 'on-track', // on-track, at-risk, delayed
+        cost: data.cost || '$5,000',
+        time: data.time || '3 Days',
+        needs: data.needs || ['3 Laborers', '2 Cement Trucks', '1 Pump'],
+        artifacts: data.artifacts || ['Foundation Complete'],
+        ...data
+    };
+
+    const statusColors: Record<string, string> = {
+        'on-track': 'bg-emerald-500',
+        'at-risk': 'bg-amber-500',
+        'delayed': 'bg-rose-500'
+    };
+
     return (
-        <div className="px-6 py-4 rounded-2xl bg-slate-900/80 backdrop-blur-md border border-white/10 shadow-xl shadow-black/50 text-white min-w-[150px] flex items-center justify-center transition-all hover:bg-slate-800/80 hover:border-blue-500/50 cursor-grab active:cursor-grabbing">
-            <Handle type="target" position={Position.Top} className="w-3 h-3 bg-blue-500 border-2 border-slate-950" />
-            <div className="font-medium text-slate-200">{data.label}</div>
-            <Handle type="source" position={Position.Bottom} className="w-3 h-3 bg-purple-500 border-2 border-slate-950" />
+        <div className="flex w-[480px] rounded-2xl bg-slate-900/90 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/50 overflow-hidden text-slate-200 transition-all hover:border-blue-500/50 hover:bg-slate-800/90 cursor-grab active:cursor-grabbing">
+            {/* Status Indicator Strip */}
+            <div className={`w-2 shrink-0 ${statusColors[nodeData.status] || 'bg-slate-500'}`} />
+
+            {/* Inputs Zone (Left) */}
+            <div className="w-16 bg-slate-800/50 flex flex-col items-center justify-center border-r border-white/5 relative">
+                <Handle 
+                    type="target" 
+                    position={Position.Left} 
+                    className="w-4 h-4 bg-emerald-400 border-2 border-slate-900 rounded-full !ml-0" 
+                    style={{ left: -10 }}
+                />
+                <span className="text-[10px] uppercase tracking-widest font-bold text-slate-500 -rotate-90 whitespace-nowrap">
+                    Inputs
+                </span>
+            </div>
+
+            {/* Body Zone (Center) */}
+            <div className="flex-1 p-5 flex flex-col gap-4">
+                {/* Header */}
+                <h3 className="text-lg font-bold text-white tracking-tight leading-tight">{nodeData.title}</h3>
+
+                {/* AI Estimates Badges */}
+                <div className="flex gap-3">
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold">
+                        <DollarSign className="w-4 h-4" />
+                        {nodeData.cost}
+                    </div>
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs font-semibold">
+                        <Clock className="w-4 h-4" />
+                        {nodeData.time}
+                    </div>
+                </div>
+
+                {/* Needs List */}
+                <div className="bg-slate-950/60 border border-white/5 rounded-xl p-3">
+                    <div className="text-[10px] text-slate-500 uppercase tracking-widest mb-2 font-bold">Needs</div>
+                    <div className="flex flex-wrap gap-2">
+                        {nodeData.needs.map((need: string, i: number) => (
+                            <span key={i} className="flex items-center gap-1.5 text-xs font-medium text-slate-300 bg-white/5 px-2.5 py-1 rounded-lg border border-white/5">
+                                <HardHat className="w-3.5 h-3.5 text-slate-400" />
+                                {need}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* Outputs Zone (Right) */}
+            <div className="w-36 bg-slate-800/30 p-4 flex flex-col items-end justify-center border-l border-white/5 relative">
+                <span className="text-[10px] text-slate-500 uppercase tracking-widest mb-3 font-bold text-right w-full">Outputs</span>
+                <div className="flex flex-col gap-2 w-full">
+                    {nodeData.artifacts.map((artifact: string, i: number) => (
+                        <div key={i} className="flex items-center justify-end gap-1.5 text-[11px] font-semibold text-purple-300 bg-purple-500/10 px-2.5 py-1.5 rounded-lg border border-purple-500/20 w-full text-right shadow-sm border-r-2 border-r-purple-400">
+                            <FileText className="w-3.5 h-3.5 shrink-0 opacity-70" />
+                            <span className="truncate">{artifact}</span>
+                        </div>
+                    ))}
+                </div>
+                <Handle 
+                    type="source" 
+                    position={Position.Right} 
+                    className="w-4 h-4 bg-purple-400 border-2 border-slate-900 rounded-full !mr-0" 
+                    style={{ right: -10 }}
+                />
+            </div>
         </div>
     );
 };
@@ -34,6 +113,7 @@ const initialNodes = [
 const ProjectBoard: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+    const [menu, setMenu] = useState<{ id?: string, top: number, left: number } | null>(null);
 
     // Load project on mount
     useEffect(() => {
@@ -55,6 +135,46 @@ const ProjectBoard: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         (params: Connection | Edge) => setEdges((eds) => addEdge(params, eds)),
         [setEdges]
     );
+
+    const onPaneContextMenu = useCallback((event: React.MouseEvent) => {
+        event.preventDefault();
+        setMenu({
+            top: event.clientY,
+            left: event.clientX,
+        });
+    }, []);
+
+    const onNodeContextMenu = useCallback((event: React.MouseEvent, node: any) => {
+        event.preventDefault();
+        setMenu({
+            id: node.id,
+            top: event.clientY,
+            left: event.clientX,
+        });
+    }, []);
+
+    const onPaneClick = useCallback(() => {
+        setMenu(null);
+    }, []);
+
+    const handleAddNode = () => {
+        if (!menu) return;
+        const newNode = {
+            id: Date.now().toString(),
+            type: 'custom',
+            position: { x: (Math.random() * 200) + 100, y: (Math.random() * 200) + 100 },
+            data: { label: 'New Node' }
+        };
+        setNodes((nds) => nds.concat(newNode));
+        setMenu(null);
+    };
+
+    const handleDeleteNode = () => {
+        if (!menu || !menu.id) return;
+        setNodes((nds) => nds.filter((n) => n.id !== menu.id));
+        setEdges((eds) => eds.filter((e) => e.source !== menu.id && e.target !== menu.id));
+        setMenu(null);
+    };
 
     const handleSave = () => {
         const data = { nodes, edges };
@@ -126,6 +246,10 @@ const ProjectBoard: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
+                onPaneContextMenu={onPaneContextMenu}
+                onNodeContextMenu={onNodeContextMenu}
+                onPaneClick={onPaneClick}
+                onNodeClick={onPaneClick}
                 fitView
                 className="bg-slate-950"
             >
@@ -137,6 +261,34 @@ const ProjectBoard: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                     className="mb-4 mr-4"
                 />
             </ReactFlow>
+
+            {/* Fuzzy Context Menu */}
+            {menu && (
+                <div 
+                    className="absolute z-[200] w-48 bg-slate-900/90 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/50 rounded-xl overflow-hidden animate-fade-in"
+                    style={{ top: menu.top, left: menu.left }}
+                >
+                    <div className="p-1">
+                        {!menu.id ? (
+                            <button
+                                onClick={handleAddNode}
+                                className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-blue-500/30 rounded-lg transition-colors flex items-center gap-3 font-medium"
+                            >
+                                <Plus className="w-4 h-4 text-blue-400" />
+                                Add Node
+                            </button>
+                        ) : (
+                            <button
+                                onClick={handleDeleteNode}
+                                className="w-full text-left px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-colors flex items-center gap-3 font-medium cursor-pointer"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                Delete Node
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
