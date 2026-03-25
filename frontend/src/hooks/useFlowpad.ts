@@ -6,7 +6,7 @@ export function useFlowpad(padId: string = 'dash_pad') {
     const { email } = useAuth(); // Or however email is obtained
     const [content, setContent] = useState('');
     const [isLoading, setIsLoading] = useState(true);
-    
+
     // Use a ref to store the latest timeout ID for debouncing
     const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -14,7 +14,7 @@ export function useFlowpad(padId: string = 'dash_pad') {
     useEffect(() => {
         if (!email) return;
         let isMounted = true;
-        
+
         const fetchPad = async () => {
             try {
                 setIsLoading(true);
@@ -32,7 +32,7 @@ export function useFlowpad(padId: string = 'dash_pad') {
         };
 
         fetchPad();
-        
+
         return () => {
             isMounted = false;
         };
@@ -41,7 +41,7 @@ export function useFlowpad(padId: string = 'dash_pad') {
     // Save with debounce
     const updateContent = useCallback((newContent: string) => {
         setContent(newContent);
-        
+
         if (!email) return;
 
         // Clear existing timeout if it exists
@@ -57,7 +57,7 @@ export function useFlowpad(padId: string = 'dash_pad') {
                 console.error('Failed to save flowpad:', error);
             }
         }, 1000);
-        
+
     }, [email, padId]);
 
     // Cleanup timeout on unmount
