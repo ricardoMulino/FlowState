@@ -13,6 +13,7 @@ import { ProtectedRoute } from './components/ProtectedRoute.tsx'
 import { WebSocketProvider } from './contexts/WebSocketContext.tsx'
 
 import { Calendar } from './pages/Calendar.tsx'
+import { Vantage } from './pages/Vantage.tsx'
 import { Tags } from './pages/Tags.tsx'
 import Dash from './dash.tsx'
 import Settings from './settingMenu.tsx'
@@ -44,6 +45,20 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <Calendar />,
+      },
+    ],
+  },
+  {
+    path: "/vantage",
+    element: (
+      <ProtectedRoute>
+        <App />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        index: true,
+        element: <Vantage />,
       },
     ],
   },

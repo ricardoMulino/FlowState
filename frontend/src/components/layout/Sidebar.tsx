@@ -9,7 +9,8 @@ import {
     LogOut,
     ChevronLeft,
     ChevronRight,
-    Sparkles
+    Sparkles,
+    Telescope
 } from 'lucide-react';
 import { signOutUser } from '../../auth';
 import { motion } from 'framer-motion';
@@ -27,6 +28,7 @@ export const Sidebar: React.FC = () => {
     const mainNavItems = [
         { icon: Home, label: 'Dashboard', path: '/dash' },
         { icon: Calendar, label: 'Calendar', path: '/calendar' },
+        { icon: Telescope, label: 'Vantage', path: '/vantage' },
         { icon: Tag, label: 'Tags', path: '/tags' },
         { icon: Sparkles, label: 'Flow', path: '/flow' },
     ];

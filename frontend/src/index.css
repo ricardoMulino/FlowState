@@ -153,3 +153,47 @@
 *:hover::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.25);
 }
+
+/* --- ReactFlow Glassmorphism Overrides --- */
+.react-flow__controls {
+    @apply flex flex-col gap-1 rounded-xl overflow-hidden shadow-xl !important;
+    background-color: rgba(15, 23, 42, 0.8) !important;
+    backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3) !important;
+}
+
+.react-flow__controls-button {
+    @apply bg-transparent transition-colors flex items-center justify-center !important;
+    width: 40px !important;
+    height: 40px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.react-flow__controls-button:last-child {
+    border-bottom: none !important;
+}
+
+.react-flow__controls-button:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.react-flow__controls-button svg {
+    fill: #94a3b8 !important; /* slate-400 */
+    transition: fill 0.2s;
+}
+
+.react-flow__controls-button:hover svg {
+    fill: #ffffff !important;
+}
+
+.react-flow__minimap {
+    @apply rounded-xl overflow-hidden shadow-xl mb-6 mr-6 !important;
+    background-color: rgba(15, 23, 42, 0.8) !important;
+    backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.react-flow__minimap-mask {
+    fill: rgba(15, 23, 42, 0.7) !important;
+}
