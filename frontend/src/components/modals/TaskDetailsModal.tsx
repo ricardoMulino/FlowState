@@ -209,7 +209,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                                                     )}
                                                     {(task.aiEstimationStatus === 'success' && (task.aiRecommendation === 'keep' || task.duration === task.aiTimeEstimation)) && (
                                                         <span className="text-green-400 font-medium flex items-center gap-1" title={task.aiReasoning}>
-                                                            <CheckSquare className="w-4 h-4" /> Looks good {Math.floor(task.aiTimeEstimation / 60)}:{(task.aiTimeEstimation % 60 < 10 ? '0' + (task.aiTimeEstimation % 60) : (task.aiTimeEstimation % 60))}
+                                                            <CheckSquare className="w-4 h-4" /> Looks good {Math.floor((task.aiTimeEstimation ?? 0) / 60)}:{((task.aiTimeEstimation ?? 0) % 60 < 10 ? '0' + ((task.aiTimeEstimation ?? 0) % 60) : ((task.aiTimeEstimation ?? 0) % 60))}
                                                         </span>
                                                     )}
                                                     {task.aiEstimationStatus === 'success' && task.aiRecommendation === 'increase' && task.duration !== task.aiTimeEstimation && (
@@ -219,7 +219,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                                                             className="text-yellow-400 font-medium flex items-center gap-1 hover:bg-yellow-400/10 px-1.5 py-0.5 rounded transition-colors cursor-pointer"
                                                             title={`Click to apply: ${task.aiReasoning}`}
                                                         >
-                                                            ⚠ Suggest {Math.floor(task.aiTimeEstimation / 60)}:{(task.aiTimeEstimation % 60 < 10 ? '0' + (task.aiTimeEstimation % 60) : (task.aiTimeEstimation % 60))}
+                                                            ⚠ Suggest {Math.floor((task.aiTimeEstimation ?? 0) / 60)}:{((task.aiTimeEstimation ?? 0) % 60 < 10 ? '0' + ((task.aiTimeEstimation ?? 0) % 60) : ((task.aiTimeEstimation ?? 0) % 60))}
                                                         </button>
                                                     )}
                                                     {task.aiEstimationStatus === 'error' && (
