@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Telescope, Save, LogOut, Upload, Trash2, Clock, DollarSign, FileText, HardHat } from 'lucide-react';
+import { Plus, Telescope, Save, LogOut, Trash2, Clock, DollarSign, FileText, HardHat } from 'lucide-react';
 import ReactFlow, {
     ReactFlowProvider,
     useReactFlow,
@@ -14,59 +14,88 @@ import ReactFlow, {
 } from 'reactflow';
 import type { Connection, Edge } from 'reactflow';
 import 'reactflow/dist/style.css';
+import { useAuth } from '../contexts/AuthContext';
+
+// ─── Debounce hook ─────────────────────────────────────────────────────────
+function useDebounce<T>(value: T, delay: number): T {
+    const [debounced, setDebounced] = useState(value);
+    useEffect(() => {
+        const t = setTimeout(() => setDebounced(value), delay);
+        return () => clearTimeout(t);
+    }, [value, delay]);
+    return debounced;
+}
 
 const RootNode = ({ data }: { data: any }) => {
-    const [title, setTitle] = useState(data.label || 'Project Scope');
+    const [title, setTitle] = useState(data.label && data.label !== 'Project Scope' ? data.label : '');
     const [budget, setBudget] = useState(data.budget || '');
     const [date, setDate] = useState(data.date || '');
     const [scope, setScope] = useState(data.scope || '');
 
+    // Propagate changes to parent via data callbacks
+    const fireChange = (patch: Record<string, string>) => {
+        Object.assign(data, patch);
+        data.onInputChange?.({ ...data, ...patch });
+    };
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, field: string, setter: React.Dispatch<React.SetStateAction<string>>) => {
         setter(e.target.value);
-        data[field] = e.target.value;
+        fireChange({ [field]: e.target.value });
     };
 
     const handleBudgetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value.replace(/\D/g, '');
         if (!val) {
             setBudget('');
-            data.budget = '';
+            fireChange({ budget: '' });
             return;
         }
         const formatted = parseInt(val, 10).toLocaleString('en-US');
         setBudget(formatted);
-        data.budget = formatted;
+        fireChange({ budget: formatted });
     };
 
     const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         let val = e.target.value.replace(/\D/g, '');
         if (val.length > 8) val = val.slice(0, 8);
-        
         let formatted = val;
         if (val.length >= 5) {
             formatted = `${val.slice(0, 2)}/${val.slice(2, 4)}/${val.slice(4)}`;
         } else if (val.length >= 3) {
             formatted = `${val.slice(0, 2)}/${val.slice(2)}`;
         }
-        
         setDate(formatted);
-        data.date = formatted;
+        fireChange({ date: formatted });
     };
+
+    const isGenerating = data.isGenerating || false;
 
     return (
         <div className="flex flex-col w-[200px] rounded-2xl bg-indigo-950/90 backdrop-blur-xl border border-indigo-500/30 shadow-[0_0_20px_rgba(99,102,241,0.15)] overflow-visible text-slate-200 transition-all hover:border-indigo-400/50 cursor-grab active:cursor-grabbing group">
             {/* Header */}
             <div className="bg-indigo-900/40 p-2.5 border-b border-indigo-500/20 rounded-t-2xl flex items-center gap-2">
-                <Telescope className="w-4 h-4 text-indigo-400 shrink-0" />
+                <Telescope className={`w-4 h-4 shrink-0 ${isGenerating ? 'text-purple-400 animate-pulse' : 'text-indigo-400'}`} />
                 <input 
                     type="text" 
                     value={title} 
-                    onChange={(e) => handleChange(e, 'label', setTitle)}
+                    onChange={(e) => { setTitle(e.target.value); fireChange({ label: e.target.value }); }}
                     placeholder="Project Name"
                     style={{ fontSize: `${Math.max(10, 14 - Math.max(0, title.length - 15) * 0.2)}px` }}
                     className="font-bold text-white tracking-tight leading-tight bg-transparent border-b border-transparent hover:border-indigo-400/50 focus:border-indigo-400 outline-none w-full transition-colors cursor-text"
                 />
             </div>
+
+            {/* AI generating indicator */}
+            {isGenerating && (
+                <div className="px-3 py-1.5 bg-purple-900/30 border-b border-purple-500/20 flex items-center gap-2">
+                    <div className="flex gap-0.5">
+                        <span className="w-1 h-1 rounded-full bg-purple-400 animate-bounce" style={{animationDelay:'0ms'}} />
+                        <span className="w-1 h-1 rounded-full bg-purple-400 animate-bounce" style={{animationDelay:'150ms'}} />
+                        <span className="w-1 h-1 rounded-full bg-purple-400 animate-bounce" style={{animationDelay:'300ms'}} />
+                    </div>
+                    <span className="text-[8px] text-purple-300 font-semibold uppercase tracking-widest">AI thinking...</span>
+                </div>
+            )}
 
             {/* Body */}
             <div className="p-3 flex flex-col gap-3">
@@ -242,34 +271,185 @@ const nodeTypes = {
 
 const initialNodes = [
     {
-        id: '1',
+        id: 'root-1',
         type: 'root',
         position: { x: 250, y: 250 },
         data: { label: 'Project Scope' },
     },
 ];
 
-const ProjectBoard: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+const ProjectBoard: React.FC<{ project?: any, onClose: () => void }> = ({ project, onClose }) => {
+    const { email } = useAuth();
     const { screenToFlowPosition } = useReactFlow();
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const [menu, setMenu] = useState<{ id?: string, top: number, left: number } | null>(null);
 
-    // Load project on mount
+    // ─── Reactive AI generation ─────────────────────────────────────────────
+    const [rootInput, setRootInput] = useState({ title: '', scope: '', budget: '' });
+    const debouncedRoot = useDebounce(rootInput, 1500);
+    const [, setIsGenerating] = useState(false); // drives root node indicator via data.isGenerating
+
+    // Callback wired into RootNode via node.data.onInputChange
+    const handleRootInputChange = useCallback((data: any) => {
+        setRootInput({ title: data.label || '', scope: data.scope || '', budget: data.budget || '' });
+    }, []);
+
+    // When debounced input settles with a meaningful title, call AI
     useEffect(() => {
-        const savedProject = localStorage.getItem('flowstate_vantage_project');
-        if (savedProject) {
-            try {
-                const parsed = JSON.parse(savedProject);
-                if (parsed.nodes && parsed.edges) {
-                    setNodes(parsed.nodes);
-                    setEdges(parsed.edges);
+        if (!debouncedRoot.title || debouncedRoot.title.length < 3) return;
+        setIsGenerating(true);
+        // Mark root node as generating
+        setNodes(nds => nds.map(n => n.type === 'root' ? { ...n, data: { ...n.data, isGenerating: true, onInputChange: handleRootInputChange } } : n));
+
+        fetch('http://localhost:8000/api/projects/generate-nodes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: debouncedRoot.title, scope: debouncedRoot.scope, budget: debouncedRoot.budget })
+        })
+        .then(r => r.json())
+        .then(({ tasks }) => {
+            if (!tasks || tasks.length === 0) return;
+
+            // Build nodes with left-to-right DAG layout
+            // Group by dependency depth (topological layers)
+            const idMap: Record<string, string> = {}; // original id -> react-flow id
+            const depthMap: Record<string, number> = {};
+
+            // Compute depth per node
+            const getDepth = (taskId: string, visited = new Set<string>()): number => {
+                if (taskId in depthMap) return depthMap[taskId];
+                if (visited.has(taskId)) return 0;
+                visited.add(taskId);
+                const task = tasks.find((t: any) => t.id === taskId);
+                if (!task || !task.connected_tasks?.length) {
+                    depthMap[taskId] = 0;
+                    return 0;
                 }
-            } catch (e) {
-                console.error("Failed to parse saved project:", e);
-            }
+                const maxParentDepth = Math.max(...task.connected_tasks.map((pid: string) => getDepth(pid, visited)));
+                depthMap[taskId] = maxParentDepth + 1;
+                return depthMap[taskId];
+            };
+            tasks.forEach((t: any) => getDepth(t.id));
+
+            // Group by layer
+            const layerMap: Record<number, any[]> = {};
+            tasks.forEach((t: any) => {
+                const d = depthMap[t.id] || 0;
+                if (!layerMap[d]) layerMap[d] = [];
+                layerMap[d].push(t);
+            });
+
+            const ROOT_X = 100, ROOT_Y = 80;
+            const X_GAP = 260, Y_GAP = 160;
+
+            const newNodes = tasks.map((t: any) => {
+                const layer = depthMap[t.id] || 0;
+                const layerItems = layerMap[layer];
+                const idxInLayer = layerItems.indexOf(t);
+                const rfId = `ai-${t.id}-${Date.now()}`;
+                idMap[t.id] = rfId;
+                return {
+                    id: rfId,
+                    type: 'custom',
+                    position: {
+                        x: ROOT_X + (layer + 1) * X_GAP,
+                        y: ROOT_Y + idxInLayer * Y_GAP
+                    },
+                    data: {
+                        label: t.label,
+                        cost: t.cost,
+                        time: t.time,
+                        needs: t.needs || [],
+                        artifacts: t.artifacts || [],
+                        status: 'pending'
+                    }
+                };
+            });
+
+            // Build edges (dependency arrows)
+            const newEdges: Edge[] = [];
+
+            // Edge from root to each layer-0 node
+            const rootNode = nodes.find(n => n.type === 'root');
+            const rootId = rootNode?.id || 'root-1';
+            Object.values(layerMap[0] || []).forEach((t: any) => {
+                const targetId = idMap[t.id];
+                if (targetId) newEdges.push({
+                    id: `e-root-${targetId}`,
+                    source: rootId,
+                    target: targetId,
+                    style: { stroke: '#818cf8' },
+                    animated: true
+                });
+            });
+
+            // Inter-task dependency edges
+            tasks.forEach((t: any) => {
+                const targetId = idMap[t.id];
+                (t.connected_tasks || []).forEach((depId: string) => {
+                    const sourceId = idMap[depId];
+                    if (sourceId && targetId) newEdges.push({
+                        id: `e-${sourceId}-${targetId}`,
+                        source: sourceId,
+                        target: targetId,
+                        style: { stroke: '#94a3b8' }
+                    });
+                });
+            });
+
+            setNodes(nds => {
+                const rootNodes = nds.filter(n => n.type === 'root').map(n => ({ ...n, data: { ...n.data, isGenerating: false, onInputChange: handleRootInputChange } }));
+                return [...rootNodes, ...newNodes];
+            });
+            setEdges(newEdges);
+        })
+        .catch(err => console.error('[AI Gen Error]', err))
+        .finally(() => setIsGenerating(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [debouncedRoot.title, debouncedRoot.scope, debouncedRoot.budget]);
+
+    // Wire onInputChange callback into root node data when component mounts/project changes
+    useEffect(() => {
+        setNodes(nds => nds.map(n => n.type === 'root'
+            ? { ...n, data: { ...n.data, onInputChange: handleRootInputChange } }
+            : n
+        ));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [handleRootInputChange]);
+
+    // Load saved project on mount
+    useEffect(() => {
+        if (project && project.tasks) {
+            const newNodes = project.tasks.map((t: any) => ({
+                id: t.task_client_id,
+                type: t.data?.type || 'custom',
+                position: { x: t.x || 0, y: t.y || 0 },
+                data: { ...t.data, onInputChange: t.data?.type === 'root' ? handleRootInputChange : undefined }
+            }));
+            
+            const newEdges: Edge[] = [];
+            project.tasks.forEach((t: any) => {
+                if (t.connected_tasks) {
+                    t.connected_tasks.forEach((targetId: string) => {
+                        newEdges.push({
+                            id: `e-${t.task_client_id}-${targetId}`,
+                            source: t.task_client_id,
+                            target: targetId,
+                            style: { stroke: '#94a3b8' }
+                        });
+                    });
+                }
+            });
+            
+            setNodes(newNodes);
+            setEdges(newEdges);
+        } else {
+            setNodes(nds => nds.map(n => n.type === 'root' ? { ...n, data: { ...n.data, onInputChange: handleRootInputChange } } : n));
+            setEdges([]);
         }
-    }, [setNodes, setEdges]);
+    }, [project, setNodes, setEdges, handleRootInputChange]);
+
 
     const onConnect = useCallback(
         (params: Connection | Edge) => setEdges((eds) => addEdge(params, eds)),
@@ -354,27 +534,51 @@ const ProjectBoard: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         setMenu(null);
     };
 
-    const handleSave = () => {
-        const data = { nodes, edges };
-        localStorage.setItem('flowstate_vantage_project', JSON.stringify(data));
-        alert("Project saved successfully!");
-    };
+    const handleSave = async () => {
+        if (!email) {
+            alert("No user email found to save project.");
+            return;
+        }
 
-    const handleImport = () => {
-        const input = window.prompt("Paste your project JSON plaintext:");
-        if (input) {
-            try {
-                const parsed = JSON.parse(input);
-                if (parsed.nodes && parsed.edges) {
-                    setNodes(parsed.nodes);
-                    setEdges(parsed.edges);
-                    alert("Project imported successfully!");
-                } else {
-                    alert("Invalid format: missing nodes or edges array.");
-                }
-            } catch (e) {
-                alert("Failed to parse JSON. Please check your plaintext.");
+        const rootNode = nodes.find(n => n.type === 'root') || nodes[0];
+        const projectTitle = rootNode?.data?.label || 'New Project';
+        const project_id = project?.project_id || Date.now().toString();
+
+        const projectTasks = nodes.map(node => {
+            const connected_tasks = edges
+                .filter(e => e.source === node.id)
+                .map(e => e.target);
+                
+            return {
+                task_client_id: node.id,
+                x: node.position.x,
+                y: node.position.y,
+                connected_tasks: connected_tasks,
+                data: { ...node.data, type: node.type }
+            };
+        });
+
+        const payload = {
+            email,
+            project_id,
+            title: projectTitle,
+            tasks: projectTasks
+        };
+
+        try {
+            const res = await fetch(`http://localhost:8000/api/projects`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                alert("Project saved successfully!");
+            } else {
+                alert("Failed to save project.");
             }
+        } catch (e) {
+            console.error(e);
+            alert("Error saving project.");
         }
     };
 
@@ -390,15 +594,6 @@ const ProjectBoard: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 </div>
                 
                 <div className="flex items-center gap-3 pointer-events-auto bg-slate-900/80 backdrop-blur-md p-1.5 rounded-xl border border-white/10 shadow-lg">
-                    <button
-                        onClick={handleImport}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors font-medium border border-white/10 text-sm"
-                        title="Import JSON plaintext"
-                    >
-                        <Upload className="w-4 h-4" />
-                        Import
-                    </button>
-                    <div className="w-[1px] h-6 bg-white/10 mx-1" />
                     <button
                         onClick={handleSave}
                         className="flex items-center gap-2 px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors font-medium shadow-lg shadow-blue-500/20 text-sm"
@@ -476,13 +671,54 @@ const ProjectBoard: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 };
 
 export const Vantage: React.FC = () => {
+    const { email } = useAuth();
+    const [projects, setProjects] = useState<any[]>([]);
+    const [activeProject, setActiveProject] = useState<any | null>(null);
     const [isProjectOpen, setIsProjectOpen] = useState(false);
 
-    // If a project is open, strictly render the full screen mode immediately
+    useEffect(() => {
+        if (!email) return;
+        fetch(`http://localhost:8000/api/projects/${email}`)
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data)) setProjects(data);
+            })
+            .catch(console.error);
+    }, [email, isProjectOpen]);
+
+    const handleCreateProject = () => {
+        setActiveProject(null);
+        setIsProjectOpen(true);
+    };
+
+    const handleOpenProject = (proj: any) => {
+        setActiveProject(proj);
+        setIsProjectOpen(true);
+    };
+
+    const handleDeleteProject = async (proj: any, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!confirm(`Are you sure you want to delete "${proj.title}"?`)) return;
+        
+        try {
+            const res = await fetch(`http://localhost:8000/api/projects/${email}/${proj.project_id}`, {
+                method: 'DELETE'
+            });
+            if (res.ok) {
+                setProjects(prev => prev.filter(p => p.project_id !== proj.project_id));
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     if (isProjectOpen) {
         return (
             <ReactFlowProvider>
-                <ProjectBoard onClose={() => setIsProjectOpen(false)} />
+                <ProjectBoard 
+                    project={activeProject}
+                    onClose={() => setIsProjectOpen(false)} 
+                />
             </ReactFlowProvider>
         );
     }
@@ -497,28 +733,56 @@ export const Vantage: React.FC = () => {
                     </h1>
                     <p className="text-muted-foreground mt-1">Manage your high-level projects and over-arching goals</p>
                 </div>
-                <button
-                    onClick={() => setIsProjectOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl text-white font-medium transition-colors shadow-lg shadow-blue-900/20"
-                >
-                    <Plus className="w-5 h-5" />
-                    Create Project
-                </button>
             </div>
 
-            {/* Empty State */}
-            <div className="flex flex-col items-center justify-center h-[50vh] text-center">
-                <Telescope className="w-16 h-16 text-muted-foreground mb-4 opacity-50" />
-                <h3 className="text-xl font-semibold text-foreground/70">No projects yet</h3>
-                <p className="text-muted-foreground mt-2">Establish your first project to construct your vision</p>
-                <button
-                    onClick={() => setIsProjectOpen(true)}
-                    className="mt-6 flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent/80 rounded-lg text-foreground/80 transition-colors border border-border"
-                >
-                    <Plus className="w-4 h-4" />
-                    Create Project
-                </button>
-            </div>
+            {projects.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-[50vh] text-center">
+                    <Telescope className="w-16 h-16 text-muted-foreground mb-4 opacity-50" />
+                    <h3 className="text-xl font-semibold text-foreground/70">No projects yet</h3>
+                    <p className="text-muted-foreground mt-2">Establish your first project to construct your vision</p>
+                    <button
+                        onClick={handleCreateProject}
+                        className="mt-6 flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent/80 rounded-lg text-foreground/80 transition-colors border border-border"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Create Project
+                    </button>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {projects.map(p => (
+                        <div 
+                            key={p.project_id}
+                            onClick={() => handleOpenProject(p)}
+                            className="bg-slate-900/50 border border-white/10 rounded-xl p-6 hover:bg-slate-800/50 hover:border-blue-500/50 transition-all cursor-pointer group relative flex flex-col items-start min-h-[140px]"
+                        >
+                            <div className="flex items-start justify-between w-full mb-4">
+                                <div className="p-3 bg-blue-500/10 rounded-lg group-hover:scale-110 transition-transform">
+                                    <Telescope className="w-6 h-6 text-blue-400" />
+                                </div>
+                                <button 
+                                    onClick={(e) => handleDeleteProject(p, e)}
+                                    className="opacity-0 group-hover:opacity-100 p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                                    title="Delete Project"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-200 mb-2 truncate w-full">{p.title || 'Untitled Project'}</h3>
+                            <p className="text-sm text-slate-400">{p.tasks?.length || 0} nodes defined</p>
+                        </div>
+                    ))}
+                    
+                    {/* Add New Project Card */}
+                    <div 
+                        onClick={handleCreateProject}
+                        className="border-2 border-dashed border-white/20 rounded-xl p-6 hover:border-blue-500/50 hover:bg-slate-800/30 transition-all cursor-pointer flex flex-col items-center justify-center text-slate-400 hover:text-blue-400 min-h-[140px]"
+                    >
+                        <Plus className="w-8 h-8 mb-2" />
+                        <span className="font-semibold">Create New Project</span>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

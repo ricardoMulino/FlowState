@@ -25,7 +25,7 @@ ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://loc
 # Global MongoDB client
 mongo_client: Optional[MongoClient] = None
 # Global cache for stocks: { "data": [...], "timestamp": 0 }
-stock_cache = {"data": None, "timestamp": 0}
+stock_cache: Dict[str, Any] = {"data": None, "timestamp": 0}
 CACHE_DURATION = 300  # 5 minutes in seconds
 
 
@@ -130,6 +130,28 @@ class AgentChatRequest(BaseModel):
 class AgentRetrieveRequest(BaseModel):
     query: str
     user_id: str
+
+
+class ProjectNode(BaseModel):
+    task_client_id: str
+    x: float
+    y: float
+    connected_tasks: List[str] = []
+    data: Optional[Dict[str, Any]] = None
+
+
+
+class ProjectCreate(BaseModel):
+    email: str
+    project_id: str
+    title: str
+    tasks: List[ProjectNode] = []
+
+
+class ProjectNodeGenRequest(BaseModel):
+    title: str
+    scope: Optional[str] = ""
+    budget: Optional[str] = ""
 
 
 # ============================================================================
@@ -501,6 +523,114 @@ async def set_pad(pad: Pad):
 
 
 # ============================================================================
+# PROJECT ENDPOINTS
+# =============================================================================
+
+@app.get("/api/projects/{email}")
+async def get_projects(email: str):
+    """Get all projects for a user"""
+    client = get_client()
+    projects = db.get_all_projects_for_user(client, email)
+    # Serialize MongoDB objects
+    for proj in projects:
+        if "_id" in proj:
+            proj["_id"] = str(proj["_id"])
+    return projects
+
+@app.get("/api/projects/{email}/{project_id}")
+async def get_project(email: str, project_id: str):
+    """Get a specific project by ID"""
+    client = get_client()
+    project = db.get_project(client, email, project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if "_id" in project:
+        project["_id"] = str(project["_id"])
+    return project
+
+@app.post("/api/projects")
+async def set_project(project: ProjectCreate):
+    """Create or update a project"""
+    client = get_client()
+    tasks_dict = [t.dict() for t in project.tasks]
+    success = db.set_project(client, project.email, project.project_id, project.title, tasks_dict)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to save project")
+    return {"message": "Project saved successfully"}
+
+@app.delete("/api/projects/{email}/{project_id}")
+async def delete_project(email: str, project_id: str):
+    """Delete a project"""
+    client = get_client()
+    success = db.delete_project(client, email, project_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Project not found or already deleted")
+    return {"message": "Project deleted successfully"}
+
+
+@app.post("/api/projects/generate-nodes")
+async def generate_project_nodes(req: ProjectNodeGenRequest):
+    """
+    Use Gemini to reactively generate task nodes for a project based on title, scope, and budget.
+    Returns a list of structured task node objects ready to drop into ReactFlow.
+    """
+    import json as _json
+    from langchain_google_genai import ChatGoogleGenerativeAI
+    from langchain_core.messages import SystemMessage, HumanMessage
+    from pydantic import BaseModel as PydanticBase, Field as PydanticField
+    from typing import List as TList
+
+    class GeneratedTaskNode(PydanticBase):
+        id: str = PydanticField(description="Unique short snake_case id, e.g. 'design_ui'")
+        label: str = PydanticField(description="Human-readable task name")
+        needs: TList[str] = PydanticField(description="List of role/resource dependencies, e.g. ['Designer', 'Figma']")
+        artifacts: TList[str] = PydanticField(description="Short list of deliverable names, e.g. ['Wireframes', 'Prototype']")
+        cost: str = PydanticField(description="Estimated cost range as a short string, e.g. '$500-$1,500'")
+        time: str = PydanticField(description="Estimated time as a short string, e.g. '3-5 days'")
+        connected_tasks: TList[str] = PydanticField(description="IDs of tasks this one depends on (must precede it)")
+
+    class GeneratedProjectPlan(PydanticBase):
+        tasks: TList[GeneratedTaskNode]
+
+    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+    structured_llm = llm.with_structured_output(GeneratedProjectPlan)
+
+    budget_note = f"The total project budget is approximately {req.budget}." if req.budget else ""
+    scope_note = f"Project scope description: {req.scope}" if req.scope else ""
+
+    system_prompt = f"""You are an expert project manager and software architect.
+
+The user is building a project called: "{req.title}"
+{scope_note}
+{budget_note}
+
+Break this project down into 4-7 concrete, actionable task nodes.
+For each task:
+- Give it a unique snake_case id
+- A clear human-readable label
+- List of role/resource needs (e.g. "Backend Engineer", "AWS", "Figma")
+- 1-2 short deliverable artifact names
+- A realistic estimated cost range string (respecting budget if provided)
+- A realistic time estimate string
+- IDs of tasks it directly depends on (earlier tasks it needs completed first)
+
+Make sure the dependency graph is a valid DAG (no cycles). The first task should have no dependencies.
+Return only the structured task list."""
+
+    messages = [
+        SystemMessage(content=system_prompt),
+        HumanMessage(content=f"Generate the project breakdown for: {req.title}")
+    ]
+
+    try:
+        result = await asyncio.to_thread(structured_llm.invoke, messages)
+        return {"tasks": [t.dict() for t in result.tasks]}
+    except Exception as e:
+        print(f"[ERROR] generate_project_nodes: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
 # SETTINGS ENDPOINTS
 # ============================================================================
 
@@ -614,10 +744,10 @@ async def create_task(task: TaskCreate, background_tasks: BackgroundTasks):
 
     # Parse start_time string to datetime if provided
     start_time_dt = None
-    if task.start_time:
+    if task.start_time is not None:
         try:
             # Handle ISO string with potential Z suffix
-            clean_time = task.start_time.replace('Z', '+00:00')
+            clean_time = str(task.start_time).replace('Z', '+00:00')
             start_time_dt = datetime.fromisoformat(clean_time)
         except Exception as e:
             print(f"Error parsing start_time: {e}")
@@ -679,13 +809,15 @@ async def update_task(task_id: str, updates: TaskUpdate):
     update_data = {k: v for k, v in updates.dict().items() if v is not None}
     
     # Handle start_time parsing if present
-    if "start_time" in update_data and isinstance(update_data["start_time"], str):
-        try:
-            clean_time = update_data["start_time"].replace('Z', '+00:00')
-            update_data["start_time"] = datetime.fromisoformat(clean_time)
-        except Exception:
-            # If parsing fails, remove it so we don't send bad data to DB
-            del update_data["start_time"]
+    if "start_time" in update_data:
+        st_val = update_data["start_time"]
+        if isinstance(st_val, str):
+            try:
+                clean_time = st_val.replace('Z', '+00:00')
+                update_data["start_time"] = datetime.fromisoformat(clean_time)
+            except Exception:
+                # If parsing fails, remove it so we don't send bad data to DB
+                update_data.pop("start_time", None)
     
     if not update_data:
         raise HTTPException(status_code=400, detail="No fields to update")

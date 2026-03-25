@@ -885,3 +885,48 @@ def update_task_ai_estimation(
     )
     
     return result.acknowledged
+
+
+# =============================================================================
+# PROJECT OPERATIONS
+# =============================================================================
+
+def set_project(client: MongoClient, email: str, project_id: str, title: str, tasks: List[Dict[str, Any]]) -> bool:
+    """
+    Creates or updates a project grid environment.
+    """
+    db = client[DB_NAME]
+    collection = db["projects"]
+    
+    update_data = {
+        "email": email,
+        "project_id": project_id,
+        "title": title,
+        "tasks": tasks
+    }
+    
+    result = collection.update_one(
+        {"email": email, "project_id": project_id},
+        {"$set": update_data},
+        upsert=True
+    )
+    return result.acknowledged
+
+def get_project(client: MongoClient, email: str, project_id: str) -> Optional[Dict[str, Any]]:
+    """Retrieves a specific project."""
+    db = client[DB_NAME]
+    collection = db["projects"]
+    return collection.find_one({"email": email, "project_id": project_id})
+
+def delete_project(client: MongoClient, email: str, project_id: str) -> bool:
+    """Deletes a specific project."""
+    db = client[DB_NAME]
+    collection = db["projects"]
+    result = collection.delete_one({"email": email, "project_id": project_id})
+    return result.deleted_count > 0
+
+def get_all_projects_for_user(client: MongoClient, email: str) -> List[Dict[str, Any]]:
+    """Retrieves all projects for a specific user."""
+    db = client[DB_NAME]
+    collection = db["projects"]
+    return list(collection.find({"email": email}))
