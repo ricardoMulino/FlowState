@@ -309,7 +309,7 @@ export const Vantage: React.FC = () => {
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                         Vantage
                     </h1>
-                    <p className="text-slate-400 mt-1">Manage your high-level projects and over-arching goals</p>
+                    <p className="text-muted-foreground mt-1">Manage your high-level projects and over-arching goals</p>
                 </div>
                 <button
                     onClick={() => setIsProjectOpen(true)}
@@ -322,12 +322,12 @@ export const Vantage: React.FC = () => {
 
             {/* Empty State */}
             <div className="flex flex-col items-center justify-center h-[50vh] text-center">
-                <Telescope className="w-16 h-16 text-slate-600 mb-4" />
-                <h3 className="text-xl font-semibold text-slate-400">No projects yet</h3>
-                <p className="text-slate-500 mt-2">Establish your first project to construct your vision</p>
+                <Telescope className="w-16 h-16 text-muted-foreground mb-4 opacity-50" />
+                <h3 className="text-xl font-semibold text-foreground/70">No projects yet</h3>
+                <p className="text-muted-foreground mt-2">Establish your first project to construct your vision</p>
                 <button
                     onClick={() => setIsProjectOpen(true)}
-                    className="mt-6 flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-slate-300 transition-colors"
+                    className="mt-6 flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent/80 rounded-lg text-foreground/80 transition-colors border border-border"
                 >
                     <Plus className="w-4 h-4" />
                     Create Project

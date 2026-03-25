@@ -130,28 +130,28 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
     return (
         <>
-            <div className="flex flex-col h-full bg-slate-950 text-slate-100 overflow-hidden">
+            <div className="flex flex-col h-full bg-background text-foreground overflow-hidden">
                 {/* Main Scroll Container */}
                 <div ref={scrollContainerRef} className="flex-1 overflow-auto relative scroll-smooth">
                     <div className="flex min-w-max flex-col">
                         {/* Wrapper for the entire grid content to ensure min-width applies */}
                         <div className="flex">
                             {/* Sticky Time Sidebar */}
-                            <div className="sticky left-0 z-30 w-20 flex-shrink-0 bg-slate-950 border-r border-white/10">
-                                <div className="sticky top-0 z-40 h-[69px] bg-slate-900/95 backdrop-blur-sm border-b border-white/10 flex items-center justify-center text-[11px] font-bold text-slate-400 shadow-sm">
+                            <div className="sticky left-0 z-30 w-20 flex-shrink-0 bg-background border-r border-border">
+                                <div className="sticky top-0 z-40 h-[69px] bg-popover/95 backdrop-blur-sm border-b border-border flex items-center justify-center text-[11px] font-bold text-muted-foreground shadow-sm">
                                     {gmtOffset}
                                 </div>
 
                                 {/* Time Labels Column */}
-                                <div className="relative bg-slate-950/20">
+                                <div className="relative bg-background">
                                     {/* Spacer for 12 AM - 1 AM */}
                                     <div className="h-[60px]" />
                                     {Array.from({ length: 23 }, (_, i) => i + 1).map((hour) => (
                                         <div
                                             key={hour}
-                                            className="h-[60px] relative text-sm text-slate-400 font-semibold"
+                                            className="h-[60px] relative text-sm text-muted-foreground font-semibold"
                                         >
-                                            <span className="absolute right-3 top-0 -translate-y-1/2 bg-slate-950/20 px-1 rounded z-10">
+                                            <span className="absolute right-3 top-0 -translate-y-1/2 bg-background px-1 rounded z-10">
                                                 {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
                                             </span>
                                         </div>
@@ -162,7 +162,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                             {/* Main Content Area */}
                             <div className="flex flex-col flex-1">
                                 {/* Sticky Header Row */}
-                                <div className="sticky top-0 z-20 flex border-b border-white/10 bg-slate-900/95 backdrop-blur-sm shadow-sm h-[69px]">
+                                <div className="sticky top-0 z-20 flex border-b border-border bg-popover/95 backdrop-blur-sm shadow-sm h-[69px]">
                                     {bodyDays.map((day) => {
                                         const isSelected = isSameDay(day, currentDate);
                                         const isTodayDate = isSameDay(day, todayInTimeZone);
@@ -172,22 +172,22 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                                                 key={day.toISOString()}
                                                 onClick={() => onDateSelect(day)}
                                                 className={cn(
-                                                    "flex-1 p-3 text-center border-l border-white/10 cursor-pointer transition-colors hover:bg-white/5 flex flex-col justify-center",
-                                                    isSelected && viewMode === 'day' && "bg-blue-500/10",
-                                                    isTodayDate && !isSelected && "bg-white/5",
+                                                    "flex-1 p-3 text-center border-l border-border cursor-pointer transition-colors hover:bg-accent flex flex-col justify-center",
+                                                    isSelected && viewMode === 'day' && "bg-primary/10",
+                                                    isTodayDate && !isSelected && "bg-muted",
                                                     viewMode === 'week' ? "min-w-[150px]" : "min-w-0" // Minimum width for week view columns
                                                 )}
                                             >
                                                 <div className={cn(
                                                     "text-xs uppercase mb-1",
-                                                    isSelected && viewMode === 'day' ? "text-blue-400 font-bold" : "text-slate-400"
+                                                    isSelected && viewMode === 'day' ? "text-primary font-bold" : "text-muted-foreground"
                                                 )}>
                                                     {day.toLocaleDateString('en-US', { weekday: 'short' })}
                                                 </div>
                                                 <div className={cn(
                                                     "text-lg font-bold w-8 h-8 flex items-center justify-center mx-auto rounded-full transition-all",
-                                                    isTodayDate ? "bg-blue-600 text-white" :
-                                                        (isSelected && viewMode === 'day' ? "bg-blue-500/20 text-blue-400" : "text-slate-200")
+                                                    isTodayDate ? "bg-primary text-primary-foreground" :
+                                                        (isSelected && viewMode === 'day' ? "bg-primary/20 text-primary" : "text-foreground")
                                                 )}>
                                                     {day.getDate()}
                                                 </div>
@@ -206,9 +206,9 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                                         <div
                                             key={day.toISOString()}
                                             className={cn(
-                                                "flex flex-1 flex-col border-l border-white/10 first:border-0 relative h-[1440px]",
+                                                "flex flex-1 flex-col border-l border-border first:border-0 relative h-[1440px]",
                                                 viewMode === 'week' ? "min-w-[150px]" : "min-w-0",
-                                                isTodayDate && "bg-blue-500/5"
+                                                isTodayDate && "bg-primary/5"
                                             )}
                                         >
                                             {/* Google Calendar Style Current Time Line */}

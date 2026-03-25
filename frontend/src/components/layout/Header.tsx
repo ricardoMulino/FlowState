@@ -44,7 +44,7 @@ export const Header: React.FC = () => {
                 </div>
                 <div>
                     <h2 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">FlowState</h2>
-                    <p className="text-xs text-slate-400">{email || 'Loading...'}</p>
+                    <p className="text-xs text-muted-foreground">{email || 'Loading...'}</p>
                 </div>
             </div>
 
@@ -71,15 +71,15 @@ export const Header: React.FC = () => {
                     </button>
 
                     {isMenuOpen === 'flobot' && (
-                        <div className="absolute top-14 right-0 w-80 bg-slate-900 border border-white/10 rounded-2xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200 flex flex-col max-h-[500px]">
-                            <div className="flex items-center justify-between p-4 border-b border-white/5">
+                        <div className="absolute top-14 right-0 w-80 bg-popover border border-border rounded-2xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200 flex flex-col max-h-[500px]">
+                            <div className="flex items-center justify-between p-4 border-b border-border">
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                                         <Sparkles className="w-4 h-4 text-white" />
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-white">FloBot AI</h3>
-                                        <p className="text-[10px] text-slate-400">Your flow companion</p>
+                                        <h3 className="font-bold text-foreground">FloBot AI</h3>
+                                        <p className="text-[10px] text-muted-foreground">Your flow companion</p>
                                     </div>
                                 </div>
                                 <button
@@ -99,28 +99,28 @@ export const Header: React.FC = () => {
                                     <div key={i} className={cn(
                                         "max-w-[85%] rounded-2xl p-3 text-sm animate-in fade-in slide-in-from-bottom-1 duration-300",
                                         msg.role === 'user'
-                                            ? "ml-auto bg-blue-600/20 text-blue-100 border border-blue-500/20 rounded-tr-none"
-                                            : "mr-auto bg-white/5 text-slate-300 border border-white/5 rounded-tl-none"
+                                            ? "ml-auto bg-primary/20 text-foreground border border-primary/20 rounded-tr-none"
+                                            : "mr-auto bg-muted text-muted-foreground border border-border rounded-tl-none"
                                     )}>
                                         {msg.content}
                                     </div>
                                 ))}
                                 {isTyping && (
-                                    <div className="mr-auto bg-white/5 text-slate-400 border border-white/5 rounded-2xl rounded-tl-none p-3 flex items-center gap-2 text-xs italic">
+                                    <div className="mr-auto bg-muted text-muted-foreground border border-border rounded-2xl rounded-tl-none p-3 flex items-center gap-2 text-xs italic">
                                         <Loader2 className="w-3 h-3 animate-spin" />
                                         Thinking...
                                     </div>
                                 )}
                             </div>
 
-                            <div className="p-4 border-t border-white/5 flex gap-2">
+                            <div className="p-4 border-t border-border flex gap-2">
                                 <input
                                     type="text"
                                     value={inputValue}
                                     onChange={(e) => setInputValue(e.target.value)}
                                     onKeyPress={handleKeyPress}
                                     placeholder="Ask FloBot..."
-                                    className="flex-1 bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/50"
+                                    className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
                                 />
                                 <button
                                     onClick={handleSend}
@@ -137,22 +137,22 @@ export const Header: React.FC = () => {
                 <div className="relative">
                     <button
                         onClick={() => setIsMenuOpen(isMenuOpen === 'profile' ? false : 'profile')}
-                        className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 border-2 border-slate-900 shadow-lg hover:ring-2 hover:ring-blue-400 transition-all cursor-pointer"
+                        className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 border-2 border-background shadow-lg hover:ring-2 hover:ring-primary transition-all cursor-pointer"
                         title="Open Menu"
                     />
 
                     {isMenuOpen === 'profile' && (
-                        <div className="absolute right-0 top-12 w-48 bg-slate-900 border border-white/10 rounded-xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="absolute right-0 top-12 w-48 bg-popover border border-border rounded-xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                             <button
                                 onClick={switchAccount}
-                                className="w-full px-4 py-3 flex items-center gap-2 text-sm text-white hover:bg-white/5 transition-colors text-left"
+                                className="w-full px-4 py-3 flex items-center gap-2 text-sm text-foreground hover:bg-accent transition-colors text-left"
                             >
                                 <LogOut className="w-4 h-4" />
                                 Switch Account
                             </button>
                             <button
                                 onClick={handleLogout}
-                                className="w-full px-4 py-3 flex items-center gap-2 text-sm text-red-400 hover:bg-white/5 transition-colors text-left"
+                                className="w-full px-4 py-3 flex items-center gap-2 text-sm text-red-400 hover:bg-red-400/10 transition-colors text-left"
                             >
                                 <LogOut className="w-4 h-4" />
                                 Sign Out
