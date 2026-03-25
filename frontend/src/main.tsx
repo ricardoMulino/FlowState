@@ -11,6 +11,7 @@ import { AuthProvider } from './contexts/AuthContext.tsx'
 import { CalendarProvider } from './contexts/CalendarContext.tsx'
 import { ProtectedRoute } from './components/ProtectedRoute.tsx'
 import { WebSocketProvider } from './contexts/WebSocketContext.tsx'
+import { SettingsProvider } from './contexts/SettingsContext.tsx'
 
 import { Calendar } from './pages/Calendar.tsx'
 import { Tags } from './pages/Tags.tsx'
@@ -111,11 +112,13 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
       <AuthProvider>
-        <WebSocketProvider>
-          <CalendarProvider>
-            <RouterProvider router={router} />
-          </CalendarProvider>
-        </WebSocketProvider>
+        <SettingsProvider>
+          <WebSocketProvider>
+            <CalendarProvider>
+              <RouterProvider router={router} />
+            </CalendarProvider>
+          </WebSocketProvider>
+        </SettingsProvider>
       </AuthProvider>
     </ErrorBoundary>
   </StrictMode>,

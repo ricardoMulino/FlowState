@@ -119,6 +119,40 @@ def get_all_users(client: MongoClient) -> List[Dict[str, Any]]:
 
 
 # =============================================================================
+# SETTINGS OPERATIONS
+# =============================================================================
+
+def get_settings(client: MongoClient, email: str) -> Dict[str, Any]:
+    """Retrieves settings for a specific user from the users collection."""
+    db = client[DB_NAME]
+    collection = db["users"]
+    user = collection.find_one({"email": email}, {"settings": 1})
+    if user and "settings" in user:
+        return user["settings"]
+    # Default settings if none exist
+    return {"light_mode": False}
+
+
+def set_settings(client: MongoClient, email: str, updates: Dict[str, Any]) -> bool:
+    """Updates the settings field in the user document."""
+    db = client[DB_NAME]
+    collection = db["users"]
+    
+    # Strip unnecessary fields from the settings object
+    settings_data = updates.copy()
+    if "email" in settings_data:
+        del settings_data["email"]
+    
+    # We store the settings as a sub-object in the user document
+    result = collection.update_one(
+        {"email": email},
+        {"$set": {"settings": settings_data}},
+        upsert=True
+    )
+    return result.acknowledged
+
+
+# =============================================================================
 # TAGS OPERATIONS
 # =============================================================================
 

@@ -440,6 +440,32 @@ async def set_pad(pad: Pad):
 
 
 # ============================================================================
+# SETTINGS ENDPOINTS
+# ============================================================================
+
+@app.get("/api/settings/{email}")
+async def get_settings(email: str):
+    """Get user settings"""
+    client = get_client()
+    settings = db.get_settings(client, email)
+    return settings
+
+
+@app.post("/api/settings")
+async def set_settings(settings: Dict[str, Any]):
+    """Update user settings. Recieves a dictionary with email and updates."""
+    client = get_client()
+    email = settings.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail="Email is required")
+    
+    success = db.set_settings(client, email, settings)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to save settings")
+    return {"message": "Settings saved successfully"}
+
+
+# ============================================================================
 # TASK ENDPOINTS
 # ============================================================================
 
