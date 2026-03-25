@@ -383,6 +383,33 @@ export const padAPI = {
     }
 };
 
+
+// ============================================================================
+// SETTINGS API
+// ============================================================================
+
+export interface Settings {
+    email: string;
+    light_mode: boolean;
+}
+
+export const settingsAPI = {
+    get: async (email: string): Promise<Settings> => {
+        const response = await fetch(`${API_BASE}/settings/${encodeURIComponent(email)}`);
+        if (!response.ok) throw new Error('Failed to fetch settings');
+        return response.json();
+    },
+
+    set: async (email: string, updates: Partial<Settings>): Promise<void> => {
+        const response = await fetch(`${API_BASE}/settings`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, ...updates }),
+        });
+        if (!response.ok) throw new Error('Failed to save settings');
+    }
+};
+
 // ============================================================================
 // HEALTH CHECK
 // ============================================================================

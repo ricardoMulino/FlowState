@@ -12,6 +12,8 @@ import asyncio
 
 # Import all db functions
 import db
+import yfinance as yf
+import time
 
 # Load environment variables
 load_dotenv()
@@ -22,6 +24,9 @@ ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://loc
 
 # Global MongoDB client
 mongo_client: Optional[MongoClient] = None
+# Global cache for stocks: { "data": [...], "timestamp": 0 }
+stock_cache = {"data": None, "timestamp": 0}
+CACHE_DURATION = 300  # 5 minutes in seconds
 
 
 # ============================================================================
@@ -411,6 +416,62 @@ async def delete_tag(email: str, tag_name: str):
 
 
 # ============================================================================
+# STOCK ENDPOINTS
+# ============================================================================
+
+@app.get("/api/stocks")
+async def get_stocks():
+    """Get real-time stock data for AAPL, NVDA, TSLA, AMZN via yfinance with caching"""
+    global stock_cache
+    current_time = time.time()
+    
+    # Check cache
+    if stock_cache["data"] and (current_time - stock_cache["timestamp"] < CACHE_DURATION):
+        return stock_cache["data"]
+    
+    symbols = ["AAPL", "NVDA", "TSLA", "AMZN"]
+    try:
+        # Fetch data in a thread to avoid blocking FastAPI
+        def fetch_data():
+            results = []
+            for symbol in symbols:
+                ticker = yf.Ticker(symbol)
+                # fast_info is better but might be less reliable than info
+                # let's try info first, fallback to fast_info or skip
+                info = ticker.info
+                price = info.get('currentPrice') or info.get('regularMarketPrice')
+                prev_close = info.get('previousClose') or price
+                
+                if price is not None:
+                    change = price - prev_close
+                    percent = (change / prev_close) * 100 if prev_close else 0
+                    results.append({
+                        "symbol": symbol,
+                        "name": info.get('longName', symbol),
+                        "price": price,
+                        "change": change,
+                        "percent": percent
+                    })
+            return results
+
+        data = await asyncio.to_thread(fetch_data)
+        
+        if data:
+            stock_cache["data"] = data
+            stock_cache["timestamp"] = current_time
+            return data
+        else:
+            raise HTTPException(status_code=500, detail="Failed to fetch stock data")
+            
+    except Exception as e:
+        print(f"Error fetching stocks: {e}")
+        # If fetch fails but we have old cache, return it rather than error
+        if stock_cache["data"]:
+            return stock_cache["data"]
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
 # PAD ENDPOINTS
 # ============================================================================
 
@@ -437,6 +498,32 @@ async def set_pad(pad: Pad):
     if not success:
         raise HTTPException(status_code=500, detail="Failed to save pad")
     return {"message": "Pad saved successfully"}
+
+
+# ============================================================================
+# SETTINGS ENDPOINTS
+# ============================================================================
+
+@app.get("/api/settings/{email}")
+async def get_settings(email: str):
+    """Get user settings"""
+    client = get_client()
+    settings = db.get_settings(client, email)
+    return settings
+
+
+@app.post("/api/settings")
+async def set_settings(settings: Dict[str, Any]):
+    """Update user settings. Recieves a dictionary with email and updates."""
+    client = get_client()
+    email = settings.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail="Email is required")
+    
+    success = db.set_settings(client, email, settings)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to save settings")
+    return {"message": "Settings saved successfully"}
 
 
 # ============================================================================

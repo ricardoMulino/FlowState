@@ -159,25 +159,42 @@ export default function Dash() {
 
 // Market Trends Component
 const MarketTrends = () => {
-    const [trends, setTrends] = useState([
-        { symbol: 'SPY', name: 'S&P 500', price: 508.92, change: 1.25, percent: 0.25 },
-        { symbol: 'QQQ', name: 'Nasdaq 100', price: 438.21, change: 2.15, percent: 0.49 },
-        { symbol: 'VOO', name: 'Vanguard 500', price: 468.10, change: 1.12, percent: 0.24 },
-        { symbol: 'DIA', name: 'Dow Jones', price: 391.31, change: -0.45, percent: -0.11 },
-    ]);
+    const [trends, setTrends] = useState<any[]>([]);
+    const [error, setError] = useState<string | null>(null);
+
+    const fetchStocks = async () => {
+        try {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+            const response = await fetch(`${apiBase}/stocks`);
+            if (!response.ok) throw new Error('Failed to fetch stocks');
+            const data = await response.json();
+            setTrends(data);
+            setError(null);
+        } catch (err) {
+            console.error('Error fetching stocks:', err);
+            setError('Offline');
+        }
+    };
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            setTrends(prev => prev.map(t => {
-                const fluctuation = (Math.random() - 0.5) * 0.15;
-                const newPrice = t.price + fluctuation;
-                const newChange = t.change + fluctuation;
-                const newPercent = (newChange / (newPrice - newChange)) * 100;
-                return { ...t, price: newPrice, change: newChange, percent: newPercent };
-            }));
-        }, 5000);
+        fetchStocks();
+        const interval = setInterval(fetchStocks, 30000); // Update every 30 seconds
         return () => clearInterval(interval);
     }, []);
+
+    if (error && trends.length === 0) {
+        return <div className="text-xs text-rose-400 p-2 italic">Market data unavailable</div>;
+    }
+
+    if (trends.length === 0) {
+        return (
+            <div className="flex flex-col gap-2 w-full animate-pulse">
+                {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="h-12 bg-white/5 rounded-xl border border-white/5" />
+                ))}
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col gap-2 w-full pr-1 pb-1">

@@ -36,6 +36,6 @@ Add user information to the settings tab.
 
 Replace distribution with stocks (market trends my b) (for timmy)
 
-Tasks can't overlap
+<s>Tasks can't overlap</s>
 
 Sign In is Not Signing In (Not very fast at least)

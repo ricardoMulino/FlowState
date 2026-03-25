@@ -68,9 +68,15 @@ function Privacy() {
     );
 }
 
+import { useSettingsContext } from './contexts/SettingsContext';
+
 export default function Settings() {
-    const [isDarkMode, setIsDarkMode] = useState(true);
+    const { isDarkMode, updateSettings } = useSettingsContext();
     const [activeTab, setActiveTab] = useState<'appearance' | 'account' | 'privacy'>('appearance');
+
+    const setIsDarkMode = (val: boolean) => {
+        updateSettings({ light_mode: !val });
+    };
 
     return (
         <div className="h-full p-6 overflow-hidden flex flex-col gap-6">
