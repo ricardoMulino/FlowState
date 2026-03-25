@@ -119,7 +119,16 @@ export function useCalendarState(userEmail: string | null) {
     }, [userEmail]);//fetchTasks, 
 
     const updateTask = useCallback(async (id: string, updates: Partial<Task>) => {
-        setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...updates } : t)));
+        setTasks((prev) => prev.map((t) => {
+            if (t.id !== id) return t;
+            const merged = { ...t, ...updates };
+            // Recalculate endTime when duration changes
+            if (updates.duration !== undefined) {
+                merged.endTime = addMinutes(merged.startTime, merged.duration);
+                merged.estimatedTime = merged.duration;
+            }
+            return merged;
+        }));
         try {
             const backendUpdates: any = { ...updates };
             // Map frontend keys to backend keys

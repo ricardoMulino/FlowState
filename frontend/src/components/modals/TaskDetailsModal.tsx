@@ -213,9 +213,14 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                                                         </span>
                                                     )}
                                                     {task.aiEstimationStatus === 'success' && task.aiRecommendation === 'increase' && task.duration !== task.aiTimeEstimation && (
-                                                        <span className="text-yellow-400 font-medium flex items-center gap-1" title={task.aiReasoning}>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setDuration(task.aiTimeEstimation || duration)}
+                                                            className="text-yellow-400 font-medium flex items-center gap-1 hover:bg-yellow-400/10 px-1.5 py-0.5 rounded transition-colors cursor-pointer"
+                                                            title={`Click to apply: ${task.aiReasoning}`}
+                                                        >
                                                             ⚠ Suggest {Math.floor(task.aiTimeEstimation / 60)}:{(task.aiTimeEstimation % 60 < 10 ? '0' + (task.aiTimeEstimation % 60) : (task.aiTimeEstimation % 60))}
-                                                        </span>
+                                                        </button>
                                                     )}
                                                     {task.aiEstimationStatus === 'error' && (
                                                         <span className="text-red-400">❌ Error</span>
@@ -256,9 +261,14 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                                                         </span>
                                                     )}
                                                     {task.aiEstimationStatus === 'success' && task.aiRecommendation === 'increase' && task.cost !== task.aiCostEstimation && (
-                                                        <span className="text-yellow-400 font-medium flex items-center gap-1" title={task.aiReasoning}>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setCost(task.aiCostEstimation || cost)}
+                                                            className="text-yellow-400 font-medium flex items-center gap-1 hover:bg-yellow-400/10 px-1.5 py-0.5 rounded transition-colors cursor-pointer"
+                                                            title={`Click to apply: ${task.aiReasoning}`}
+                                                        >
                                                             ⚠ Suggest Cost {task.aiCostEstimation}
-                                                        </span>
+                                                        </button>
                                                     )}
                                                     {task.aiEstimationStatus === 'error' && (
                                                         <span className="text-red-400">❌ Error</span>

@@ -100,16 +100,19 @@ export const SmoothDraggableTask: React.FC<SmoothDraggableTaskProps> = ({ task, 
                                     <span className="text-yellow-900 text-[9px] font-bold">
                                         {task.duration !== task.aiTimeEstimation ? `${task.aiTimeEstimation}m` : `$${task.aiCostEstimation}`}
                                     </span>
-                                    {onUpdate && task.aiTimeEstimation && task.duration !== task.aiTimeEstimation && (
+                                    {onUpdate && (task.aiTimeEstimation || task.aiCostEstimation) && (task.duration !== task.aiTimeEstimation || task.cost !== task.aiCostEstimation) && (
                                         <button
                                             className="ml-1 p-0.5 bg-yellow-600/20 hover:bg-yellow-600/40 rounded-full border border-yellow-600/30 transition-colors"
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                if (onUpdate && task.aiTimeEstimation) {
-                                                    onUpdate(task.id, { duration: task.aiTimeEstimation });
+                                                if (onUpdate) {
+                                                    const updates: Partial<Task> = {};
+                                                    if (task.aiTimeEstimation) updates.duration = task.aiTimeEstimation;
+                                                    if (task.aiCostEstimation) updates.cost = task.aiCostEstimation;
+                                                    onUpdate(task.id, updates);
                                                 }
                                             }}
-                                            title="Apply AI Time Suggestion"
+                                            title="Apply AI Suggestions"
                                         >
                                             <div className="w-2 h-2 rounded-full bg-black/50" />
                                         </button>
